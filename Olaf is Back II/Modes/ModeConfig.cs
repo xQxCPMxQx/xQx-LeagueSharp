@@ -59,7 +59,7 @@ namespace Olaf.Modes
                 MenuKeys.AddItem(new MenuItem("Key.Harass", "Harass").SetValue(new KeyBind(MenuConfig.Item("Farm").GetValue<KeyBind>().Key, KeyBindType.Press))).SetFontStyle(FontStyle.Regular, Color.Coral);
                 MenuKeys.AddItem(new MenuItem("Key.HarassToggle", "Harass (Toggle)").SetValue(new KeyBind("T".ToCharArray()[0], KeyBindType.Toggle))).SetFontStyle(FontStyle.Regular, Color.Coral).Permashow(true, ObjectManager.Player.ChampionName + " | Toggle Harass", Color.Aqua);
                 MenuKeys.AddItem(new MenuItem("Key.Lane", "Lane Farm & Jungle Clear").SetValue(new KeyBind(MenuConfig.Item("LaneClear").GetValue<KeyBind>().Key, KeyBindType.Press))).SetFontStyle(FontStyle.Regular, Color.DarkKhaki);
-                MenuKeys.AddItem(new MenuItem("Key.Flee", "Flee").SetValue(new KeyBind('A', KeyBindType.Press)).SetFontStyle(FontStyle.Regular, Color.GreenYellow));
+                //MenuKeys.AddItem(new MenuItem("Key.Flee", "Flee").SetValue(new KeyBind('A', KeyBindType.Press)).SetFontStyle(FontStyle.Regular, Color.GreenYellow));
                 
                 MenuConfig.AddSubMenu(MenuKeys);
             }
@@ -76,7 +76,7 @@ namespace Olaf.Modes
 
                 MenuConfig.AddSubMenu(MenuFarm);
             }
-            Modes.ModeFlee.Init(MenuConfig);
+            //Modes.ModeFlee.Init(MenuConfig);
 
             
 
