@@ -123,8 +123,14 @@ namespace Olaf.Modes
                 return;
             }
 
+            if (!(sender is Obj_AI_Hero) || !sender.IsValidTarget(1500) || sender.IsMe || sender.IsAlly)
+            {
+                return;
+            }
+
             if (sender.IsDead)
             {
+
                 return;
             }
 
