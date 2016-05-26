@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using LeagueSharp;
 using LeagueSharp.Common;
 using Olaf.Common;
 using Olaf.Evade;
-using SharpDX;
-using SharpDX.Direct3D9;
 using SpellData = Olaf.Evade.SpellData;
 
 namespace Olaf.Modes
@@ -19,8 +14,18 @@ namespace Olaf.Modes
         public static Menu MenuLocal { get; private set; }
         private static Spell R => Champion.PlayerSpells.R;
 
-        private static readonly BuffType[] BuffList = { BuffType.Stun, BuffType.Blind, BuffType.Charm, BuffType.Fear, BuffType.Knockback, BuffType.Knockup, BuffType.Taunt, BuffType.Slow, BuffType.Silence, BuffType.Disarm, BuffType.Snare };
-        private static readonly string[] BuffListCaption = { "Stun", "Blind", "Charm", "Fear", "Knockback", "Knockup", "Taunt", "Slow", "Silence", "Disarm", "Snare" };
+        private static readonly BuffType[] BuffList =
+        {
+            BuffType.Stun, BuffType.Blind, BuffType.Charm, BuffType.Fear,
+            BuffType.Knockback, BuffType.Knockup, BuffType.Taunt, BuffType.Slow, BuffType.Silence, BuffType.Disarm,
+            BuffType.Snare
+        };
+
+        private static readonly string[] BuffListCaption =
+        {
+            "Stun", "Blind", "Charm", "Fear", "Knockback", "Knockup",
+            "Taunt", "Slow", "Silence", "Disarm", "Snare"
+        };
 
         public static void Init(Menu ParentMenu)
         {
@@ -29,7 +34,7 @@ namespace Olaf.Modes
             var buffMenu = new Menu("Buffs:", "SubMenu.Buffs");
             foreach (var displayName in BuffListCaption)
             {
-                buffMenu.AddItem(new MenuItem("Buff." + displayName, displayName).SetValue(new StringList(new[] { "Off", "On" }, 1)));
+                buffMenu.AddItem(new MenuItem("Buff." + displayName, displayName).SetValue(true));
             }
             MenuLocal.AddSubMenu(buffMenu);
 
@@ -54,15 +59,23 @@ namespace Olaf.Modes
                     HeroManager.Enemies.SelectMany(
                         t =>
                             Evade.SpellDatabase.Spells.Where(s => s.Type == SpellData.SkillShotType.SkillshotTargeted)
-                                .Where(c => string.Equals(c.ChampionName, t.ChampionName, StringComparison.InvariantCultureIgnoreCase))
+                                .Where(
+                                    c =>
+                                        string.Equals(c.ChampionName, t.ChampionName,
+                                            StringComparison.InvariantCultureIgnoreCase))
                                 .OrderBy(s => s.ChampionName)))
             {
-                championMenu.AddItem(new MenuItem("BuffT." + c.ChampionName + c.Slot, c.ChampionName + " : " + c.Slot).SetValue(true));
+                championMenu.AddItem(
+                    new MenuItem("BuffT." + c.ChampionName + c.Slot, c.ChampionName + " : " + c.Slot).SetValue(true));
             }
 
-            MenuLocal.AddItem(new MenuItem("MenuR.R.Enabled", "Enabled:").SetValue(new KeyBind("K".ToCharArray()[0], KeyBindType.Toggle, true))).SetFontStyle(FontStyle.Regular, Champion.PlayerSpells.Q.MenuColor());
-            MenuLocal.AddItem(new MenuItem("MenuR.R.OnyChampionSpells", "Dodge Only Champion Spells:").SetValue(new KeyBind(Modes.ModeConfig.MenuConfig.Item("Orbwalk").GetValue<KeyBind>().Key, KeyBindType.Press)))
-                    .SetFontStyle(FontStyle.Regular, Champion.PlayerSpells.R.MenuColor());
+            MenuLocal.AddItem(
+                new MenuItem("MenuR.R.Enabled", "Enabled:").SetValue(new KeyBind("K".ToCharArray()[0],
+                    KeyBindType.Toggle, true))).SetFontStyle(FontStyle.Regular, Champion.PlayerSpells.Q.MenuColor());
+            MenuLocal.AddItem(
+                new MenuItem("MenuR.R.OnyChampionSpells", "Dodge Only Champion Spells:").SetValue(
+                    new KeyBind(Modes.ModeConfig.MenuConfig.Item("Orbwalk").GetValue<KeyBind>().Key, KeyBindType.Press)))
+                .SetFontStyle(FontStyle.Regular, Champion.PlayerSpells.R.MenuColor());
 
             MenuLocal.AddSubMenu(championMenu);
             ParentMenu.AddSubMenu(MenuLocal);
@@ -95,13 +108,14 @@ namespace Olaf.Modes
         {
             for (int i = 0; i < BuffListCaption.Length; i++)
             {
-                if (MenuLocal.Item("Buff." + BuffListCaption[i]).GetValue<StringList>().SelectedIndex == 1 &&
+                if (MenuLocal.Item("Buff." + BuffListCaption[i]).GetValue<bool>() &&
                     ObjectManager.Player.HasBuffOfType(BuffList[i]))
                 {
                     R.Cast();
                 }
             }
         }
+
         private static void ObjAiHeroOnOnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
         {
             if (!R.IsReady() || !MenuLocal.Item("MenuR.R.Enabled").GetValue<KeyBind>().Active)
@@ -135,8 +149,10 @@ namespace Olaf.Modes
                         .Where(
                             spell =>
                                 args.Target.IsMe && spell.Slot == args.Slot &&
-                                string.Equals(((Obj_AI_Hero) sender).ChampionName, spell.ChampionName, StringComparison.InvariantCultureIgnoreCase) &&
-                                MenuLocal.Item("BuffT." + spell.ChampionName + spell.Slot) != null && MenuLocal.Item("BuffT." + spell.ChampionName + spell.Slot).GetValue<bool>()))
+                                string.Equals(((Obj_AI_Hero) sender).ChampionName, spell.ChampionName,
+                                    StringComparison.InvariantCultureIgnoreCase) &&
+                                MenuLocal.Item("BuffT." + spell.ChampionName + spell.Slot) != null &&
+                                MenuLocal.Item("BuffT." + spell.ChampionName + spell.Slot).GetValue<bool>()))
             {
                 R.Cast();
             }
