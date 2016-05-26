@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -49,7 +49,7 @@ namespace Olaf.Modes
                 ExecuteHarass();
             }
 
-            if (ModeConfig.MenuKeys.Item("Key.HarassToggle").GetValue<KeyBind>().Active && !ObjectManager.Player.IsRecalling())
+            if (ModeConfig.MenuKeys.Item("Key.HarassToggle").GetValue<KeyBind>().Active)
             {
                 ExecuteToggle();
             }
