@@ -34,7 +34,7 @@ namespace Olaf.Modes
 
         private static void OnUpdate(EventArgs args)
         {
-            if (ModeConfig.Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo || ModeConfig.MenuKeys.Item("Key.Flee").GetValue<KeyBind>().Active)
+            if (ModeConfig.Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
             {
                 return;
             }
