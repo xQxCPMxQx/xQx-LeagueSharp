@@ -49,7 +49,7 @@ namespace Olaf.Modes
                 ExecuteHarass();
             }
 
-            if (ModeConfig.MenuKeys.Item("Key.HarassToggle").GetValue<KeyBind>().Active)
+            if (ModeConfig.MenuKeys.Item("Key.HarassToggle").GetValue<KeyBind>().Active && !ObjectManager.Player.IsRecalling())
             {
                 ExecuteToggle();
             }
