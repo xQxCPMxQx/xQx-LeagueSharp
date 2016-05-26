@@ -21,7 +21,7 @@ namespace Olaf.Modes
 
         private static void GameOnOnUpdate(EventArgs args)
         {
-            if (Modes.ModeConfig.Orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.Combo)
+            if (Modes.ModeConfig.Orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.Combo && !ObjectManager.Player.IsRecalling())
             {
                 if (Modes.ModeSettings.MenuSpellE.Item("MenuE.E.Auto").GetValue<StringList>().SelectedIndex == 1)
                 {
