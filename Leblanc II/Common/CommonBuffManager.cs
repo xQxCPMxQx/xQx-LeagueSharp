@@ -151,6 +151,11 @@ namespace Leblanc.Common
 
         private void DrawingOnOnDraw(EventArgs args)
         {
+            if (!Modes.ModeDraw.MenuLocal.Item("Draw.Enable").GetValue<bool>())
+            {
+                return;
+            }
+
             foreach (var hero in HeroManager.AllHeroes)
             {
                 var passiveBuffs = (from b in hero.Buffs join b1 in PassiveBuffs on b.DisplayName equals b1.BuffName select new {b, b1}).Distinct();

@@ -45,6 +45,9 @@ namespace Leblanc.Champion
         private static readonly List<Slide> ExistingSlide = new List<Slide>();
         private static Spell W => PlayerSpells.W;
         private static Spell E => PlayerSpells.E;
+
+        private static bool DrawWObject => Modes.ModeDraw.MenuLocal.Item(Modes.ModeDraw.GetPcModeStringValue + "Draw.W.BuffTime").GetValue<StringList>().SelectedIndex == 1;
+        private static bool DrawRObject => Modes.ModeDraw.MenuLocal.Item(Modes.ModeDraw.GetPcModeStringValue + "Draw.R.BuffTime").GetValue<StringList>().SelectedIndex == 1;
         public static void Init()
         {
             GameObject.OnCreate += GameObject_OnCreate;
@@ -55,23 +58,34 @@ namespace Leblanc.Champion
 
         private static void UpdateBeamStatus(LeblancSoulShackleMType beamType, Obj_AI_Base t, BuffInstance buffInstance, float starTime, float EndTime)
         {
-            if (beamType == LeblancSoulShackleMType.FromE)
+            if (!DrawRObject && !DrawRObject)
             {
-                if (LeblancSoulShackle.EndTime < Game.Time || buffInstance.EndTime > LeblancSoulShackle.EndTime)
+                return;
+            }
+
+            if (DrawWObject)
+            {
+                if (beamType == LeblancSoulShackleMType.FromE)
                 {
-                    LeblancSoulShackle.Object = t;
-                    LeblancSoulShackle.StartTime = buffInstance.StartTime;
-                    LeblancSoulShackle.EndTime = (float) (buffInstance.EndTime + 0.3);
+                    if (LeblancSoulShackle.EndTime < Game.Time || buffInstance.EndTime > LeblancSoulShackle.EndTime)
+                    {
+                        LeblancSoulShackle.Object = t;
+                        LeblancSoulShackle.StartTime = buffInstance.StartTime;
+                        LeblancSoulShackle.EndTime = (float) (buffInstance.EndTime + 0.3);
+                    }
                 }
             }
 
-            if (beamType == LeblancSoulShackleMType.FromR)
+            if (DrawRObject)
             {
-                if (LeblancSoulShackleM.EndTime < Game.Time || buffInstance.EndTime > LeblancSoulShackleM.EndTime)
+                if (beamType == LeblancSoulShackleMType.FromR)
                 {
-                    LeblancSoulShackleM.Object = t;
-                    LeblancSoulShackleM.StartTime = buffInstance.StartTime;
-                    LeblancSoulShackleM.EndTime = (float)(buffInstance.EndTime + 0.3);
+                    if (LeblancSoulShackleM.EndTime < Game.Time || buffInstance.EndTime > LeblancSoulShackleM.EndTime)
+                    {
+                        LeblancSoulShackleM.Object = t;
+                        LeblancSoulShackleM.StartTime = buffInstance.StartTime;
+                        LeblancSoulShackleM.EndTime = (float) (buffInstance.EndTime + 0.3);
+                    }
                 }
             }
         }
@@ -79,111 +93,115 @@ namespace Leblanc.Champion
 
         private static void GameOnOnUpdate(EventArgs args)
         {
-            //foreach (var t1 in HeroManager.Enemies.Where(t1 => t1.IsValidTarget(E.Range * 2)))
-            //{
-            //    foreach (var b in t1.Buffs)
-            //    {
-            //        if (b.DisplayName.ToLower().Contains("Leblanc"))
-            //        {
-            //            Game.PrintChat(b.DisplayName);
-            //        }
-            //    }
-            //}
+            if (!DrawRObject && !DrawRObject)
+            {
+                return;
+            }
 
             foreach (var eObjects in ObjectManager.Get<Obj_AI_Base>().Where(e => e.IsEnemy && !e.IsDead && e.IsValidTarget(1500)))
             {
                 BuffInstance beam = null;
-                beam = eObjects.Buffs.Find(buff => buff.DisplayName.Equals("Leblancshacklebeam", StringComparison.InvariantCultureIgnoreCase));
-                if (beam != null)
+                if (DrawWObject)
                 {
-                  UpdateBeamStatus(LeblancSoulShackleMType.FromE, eObjects, beam, beam.StartTime, beam.EndTime);
-                }
 
-                beam = eObjects.Buffs.Find(buff => buff.DisplayName.Equals("Leblancshacklebeamm", StringComparison.InvariantCultureIgnoreCase));
-                if (beam != null)
-                {
-                    UpdateBeamStatus(LeblancSoulShackleMType.FromR, eObjects, beam, beam.StartTime, beam.EndTime);
-                    //if (LeblancSoulShackleM.EndTime < Game.Time || beam.EndTime > LeblancSoulShackle.EndTime)
-                    //{
-                    //    LeblancSoulShackleM.Object = eObjects;
-                    //    LeblancSoulShackleM.StartTime = beam.StartTime;
-                    //    LeblancSoulShackleM.EndTime = (float)(beam.EndTime + 0.3);
-                    //}
-                }
-            }
-
-            //var t = TargetSelector.GetTarget(E.Range * 2, TargetSelector.DamageType.Physical);
-            //if (t.IsValidTarget())
-            //{
-            //    if (t.Buffs.Find(buff => buff.DisplayName.Equals("Leblancshacklebeam", StringComparison.InvariantCultureIgnoreCase)) != null)
-            //    {
-            //        BuffInstance b = t.Buffs.Find(buff => buff.DisplayName.Equals("Leblancshacklebeam", StringComparison.InvariantCultureIgnoreCase));
-            //        if (LeblancSoulShackle.EndTime < Game.Time || b.EndTime > LeblancSoulShackle.EndTime)
-            //        {
-            //            LeblancSoulShackle.Object = t;
-            //            LeblancSoulShackle.StartTime = b.StartTime;
-            //            LeblancSoulShackle.EndTime = (float) (b.EndTime + 0.3);
-            //        }
-            //    }
-
-            //    if (t.Buffs.Find(buff => buff.DisplayName.Equals("Leblancshacklebeamm", StringComparison.InvariantCultureIgnoreCase)) != null)
-            //    {
-            //        BuffInstance b = t.Buffs.Find(buff => buff.DisplayName.Equals("Leblancshacklebeamm", StringComparison.InvariantCultureIgnoreCase));
-            //        if (LeblancSoulShackleM.EndTime < Game.Time || b.EndTime > LeblancSoulShackleM.EndTime)
-            //        {
-            //            LeblancSoulShackleM.Object = t;
-            //            LeblancSoulShackleM.StartTime = b.StartTime;
-            //            LeblancSoulShackleM.EndTime = (float)(b.EndTime + 0.3);
-            //        }
-            //    }
-            //}
-        }
-
-        private static void DrawingOnOnDraw(EventArgs args)
-        {
-            foreach (var eObjects in ObjectManager.Get<Obj_AI_Base>().Where(e => e.IsEnemy && !e.IsDead && e.IsValidTarget(1500)))
-            {
-                if (LeblancSoulShackle.EndTime >= Game.Time && eObjects.NetworkId == LeblancSoulShackle.Object.NetworkId)
-                {
-                    var circle = new Geometry.Circle2(LeblancSoulShackle.Object.Position.To2D(), 170f, Game.Time * 300 - LeblancSoulShackle.StartTime * 300, LeblancSoulShackle.EndTime * 300 - LeblancSoulShackle.StartTime * 300).ToPolygon();
-                    circle.Draw(Color.GreenYellow, 5);
-                }
-
-                if (LeblancSoulShackleM.EndTime >= Game.Time && eObjects.NetworkId == LeblancSoulShackleM.Object.NetworkId)
-                {
-                    var circle = new Geometry.Circle2(LeblancSoulShackleM.Object.Position.To2D(), 190f, Game.Time * 300 - LeblancSoulShackleM.StartTime * 300, LeblancSoulShackleM.EndTime * 300 - LeblancSoulShackleM.StartTime * 300).ToPolygon();
-                    circle.Draw(Color.DarkRed, 5);
-                }
-            }
-           
-            foreach (var x in ExistingSlide)
-            {
-                if (x.EndTime >= Game.Time)
-                {
-                    var color = x.Type == 1 ? Color.DarkRed : Color.DeepPink;
-                    var width = 4;
-
-                    var circle = new Geometry.Circle2(x.Position.To2D(), 150f, Game.Time * 300 - x.StartTime * 300, x.EndTime * 300 - x.StartTime * 300).ToPolygon();
-                    circle.Draw(color, width);
-
-                    var startpos = ObjectManager.Player.Position;
-                    var endpos = x.Position;
-                    if (startpos.Distance(endpos) > 100)
+                    beam = eObjects.Buffs.Find(buff => buff.DisplayName.Equals("Leblancshacklebeam", StringComparison.InvariantCultureIgnoreCase));
+                    if (beam != null)
                     {
-                        var endpos1 = x.Position + (startpos - endpos).To2D().Normalized().Rotated(25*(float) Math.PI/180).To3D() * 75;
-                        var endpos2 = x.Position + (startpos - endpos).To2D().Normalized().Rotated(-25*(float) Math.PI/180).To3D() * 75;
+                        UpdateBeamStatus(LeblancSoulShackleMType.FromE, eObjects, beam, beam.StartTime, beam.EndTime);
+                    }
+                }
 
-                        var x1 = new LeagueSharp.Common.Geometry.Polygon.Line(startpos, endpos);
-                        x1.Draw(color, width -2);
-                        var y1 = new LeagueSharp.Common.Geometry.Polygon.Line(endpos, endpos1);
-                        y1.Draw(color, width -2);
-                        var z1 = new LeagueSharp.Common.Geometry.Polygon.Line(endpos, endpos2);
-                        z1.Draw(color, width -2);
+                if (DrawRObject)
+                { 
+                    beam = eObjects.Buffs.Find(buff => buff.DisplayName.Equals("Leblancshacklebeamm", StringComparison.InvariantCultureIgnoreCase));
+                    if (beam != null)
+                    {
+                        UpdateBeamStatus(LeblancSoulShackleMType.FromR, eObjects, beam, beam.StartTime, beam.EndTime);
                     }
                 }
             }
         }
 
+        private static void DrawingOnOnDraw(EventArgs args)
+        {
+            if (!Modes.ModeDraw.MenuLocal.Item("Draw.Enable").GetValue<bool>())
+            {
+                return;
+            }
+
+            if (!DrawRObject && !DrawRObject)
+            {
+                return;
+            }
+
+            foreach (var eObjects in ObjectManager.Get<Obj_AI_Base>().Where(e => e.IsEnemy && !e.IsDead && e.IsValidTarget(1500)))
+            {
+                if (DrawWObject)
+                { 
+                    if (LeblancSoulShackle.EndTime >= Game.Time && eObjects.NetworkId == LeblancSoulShackle.Object.NetworkId)
+                    {
+                        var circle = new Geometry.Circle2(LeblancSoulShackle.Object.Position.To2D(), LeblancSoulShackle.Object.BoundingRadius - 20, Game.Time * 300 - LeblancSoulShackle.StartTime * 300, LeblancSoulShackle.EndTime * 300 - LeblancSoulShackle.StartTime * 300).ToPolygon();
+                        circle.Draw(Color.GreenYellow, 5);
+                    }
+                }
+
+                if (DrawWObject)
+                {
+                    if (LeblancSoulShackleM.EndTime >= Game.Time && eObjects.NetworkId == LeblancSoulShackleM.Object.NetworkId)
+                    {
+                        var circle = new Geometry.Circle2(LeblancSoulShackleM.Object.Position.To2D(), LeblancSoulShackleM.Object.BoundingRadius, Game.Time * 300 - LeblancSoulShackleM.StartTime * 300, LeblancSoulShackleM.EndTime * 300 - LeblancSoulShackleM.StartTime * 300).ToPolygon();
+                        circle.Draw(Color.DarkRed, 5);
+                    }
+                }
+            }
+
+            if (DrawWObject)
+            {
+                var wSlide = ExistingSlide.FirstOrDefault(s => s.Type == 0 && s.EndTime >= Game.Time);
+                if (wSlide != null)
+                {
+                    DrawArrow(wSlide);
+                }
+            }
+
+            if (DrawRObject)
+            {
+                var rSlide = ExistingSlide.FirstOrDefault(s => s.Type == 1 && s.EndTime >= Game.Time);
+                if (rSlide != null)
+                {
+                    DrawArrow(rSlide);
+                }
+            }
+        }
+
+        static void DrawArrow(Slide slide)
+        {
+            if (!DrawRObject && !DrawRObject)
+            {
+                return;
+            }
+
+            var color = slide.Type == 1 ? Color.DarkRed : Color.DeepPink;
+            var width = 4;
+            
+            var circle = new Geometry.Circle2(slide.Position.To2D(), 150f, Game.Time * 300 - slide.StartTime * 300, slide.EndTime * 300 - slide.StartTime * 300).ToPolygon();
+            circle.Draw(color, width);
+
+            var startpos = ObjectManager.Player.Position;
+            var endpos = slide.Position;
+            if (startpos.Distance(endpos) > 100)
+            {
+                var endpos1 = slide.Position + (startpos - endpos).To2D().Normalized().Rotated(25 * (float)Math.PI / 180).To3D() * 75;
+                var endpos2 = slide.Position + (startpos - endpos).To2D().Normalized().Rotated(-25 * (float)Math.PI / 180).To3D() * 75;
+
+                var x1 = new LeagueSharp.Common.Geometry.Polygon.Line(startpos, endpos);
+                x1.Draw(color, width - 2);
+                var y1 = new LeagueSharp.Common.Geometry.Polygon.Line(endpos, endpos1);
+                y1.Draw(color, width - 2);
+                var z1 = new LeagueSharp.Common.Geometry.Polygon.Line(endpos, endpos2);
+                z1.Draw(color, width - 2);
+            }
+        }
         private static void GameObject_OnCreate(GameObject sender, EventArgs args)
         {
             if (
@@ -206,6 +224,11 @@ namespace Leblanc.Champion
 
         private static void GameObject_OnDelete(GameObject sender, EventArgs args)
         {
+            if (!DrawRObject && !DrawRObject)
+            {
+                return;
+            }
+
             if (
                 sender.Name.Equals("Leblanc_base_w_return_indicator.troy", StringComparison.InvariantCultureIgnoreCase) ||
                 sender.Name.Equals("Leblanc_base_rw_return_indicator.troy", StringComparison.InvariantCultureIgnoreCase))

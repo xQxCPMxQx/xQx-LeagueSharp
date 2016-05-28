@@ -24,7 +24,7 @@ namespace Leblanc.Modes
         public static Menu MenuTools { get; private set; }
         public static void Init()
         {
-            MenuConfig = new Menu(":: Leblanc is Back", "Leblanc", true).SetFontStyle(FontStyle.Regular, Color.GreenYellow);
+            MenuConfig = new Menu(":: Leblanc II ::", "Leblanc", true).SetFontStyle(FontStyle.Regular, Color.GreenYellow);
 
             MenuTools = new Menu("Tools", "Tools").SetFontStyle(FontStyle.Regular, Color.Aqua);
             MenuConfig.AddSubMenu(MenuTools);

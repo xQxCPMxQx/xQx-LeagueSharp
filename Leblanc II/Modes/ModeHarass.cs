@@ -91,6 +91,11 @@ namespace Leblanc.Modes
         }
         private static void ExecuteHarass()
         {
+            if (W.StillJumped())
+            {
+                W.Cast();
+            }
+
             if (MenuLocal.Item("Harass.UseQ").GetValue<bool>() && Q.CanCast(Target))
             {
                 PlayerSpells.CastQ(Target);
@@ -121,6 +126,11 @@ namespace Leblanc.Modes
             if (Modes.ModeConfig.Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo || Modes.ModeConfig.Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Mixed)
             {
                 return;
+            }
+
+            if (W.StillJumped())
+            {
+                W.Cast();
             }
 
             if (MenuLocal.Item("Toggle.UseQ").GetValue<bool>() && Q.CanCast(Target))

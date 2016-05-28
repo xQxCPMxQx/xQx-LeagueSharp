@@ -109,7 +109,7 @@ namespace Leblanc.Modes
                     MenuLocal.AddSubMenu(SubMenuBuffs);
                 }
 
-                SubMenuTimers = new Menu("Spell Times", "DrawSpellTimes");
+                SubMenuTimers = new Menu("W-R Objects", "DrawSpellTimes");
                 {
                     for (int i = 0; i < 2; i++)
                     {
@@ -161,25 +161,25 @@ namespace Leblanc.Modes
 
         private void GameOnOnUpdate(EventArgs args)
         {
-            if (SubMenuTimers.Item(GetPcModeStringValue + "Draw.W.BuffTime").GetValue<StringList>().SelectedIndex == 1 && CommonBuffs.LeblancHaveFrenziedStrikes)
-            {
-                BuffInstance b = ObjectManager.Player.Buffs.Find(buff => buff.DisplayName == "LeblancFrenziedStrikes");
-                if (LeblancViciousStrikes.EndTime < Game.Time || b.EndTime > LeblancViciousStrikes.EndTime)
-                {
-                    LeblancViciousStrikes.StartTime = b.StartTime;
-                    LeblancViciousStrikes.EndTime = b.EndTime;
-                }
-            }
+            //if (SubMenuTimers.Item(GetPcModeStringValue + "Draw.W.BuffTime").GetValue<StringList>().SelectedIndex == 1 && CommonBuffs.LeblancHaveFrenziedStrikes)
+            //{
+            //    BuffInstance b = ObjectManager.Player.Buffs.Find(buff => buff.DisplayName == "LeblancFrenziedStrikes");
+            //    if (LeblancViciousStrikes.EndTime < Game.Time || b.EndTime > LeblancViciousStrikes.EndTime)
+            //    {
+            //        LeblancViciousStrikes.StartTime = b.StartTime;
+            //        LeblancViciousStrikes.EndTime = b.EndTime;
+            //    }
+            //}
             
-            if (SubMenuTimers.Item(GetPcModeStringValue + "Draw.R.BuffTime").GetValue<StringList>().SelectedIndex == 1 & CommonBuffs.LeblancHaveRagnarok)
-            {
-                BuffInstance b = ObjectManager.Player.Buffs.Find(buff => buff.DisplayName == "LeblancRagnarok");
-                if (LeblancRagnarok.EndTime < Game.Time || b.EndTime > LeblancRagnarok.EndTime)
-                {
-                    LeblancRagnarok.StartTime = b.StartTime;
-                    LeblancRagnarok.EndTime = b.EndTime;
-                }
-            }
+            //if (SubMenuTimers.Item(GetPcModeStringValue + "Draw.R.BuffTime").GetValue<StringList>().SelectedIndex == 1 & CommonBuffs.LeblancHaveRagnarok)
+            //{
+            //    BuffInstance b = ObjectManager.Player.Buffs.Find(buff => buff.DisplayName == "LeblancRagnarok");
+            //    if (LeblancRagnarok.EndTime < Game.Time || b.EndTime > LeblancRagnarok.EndTime)
+            //    {
+            //        LeblancRagnarok.StartTime = b.StartTime;
+            //        LeblancRagnarok.EndTime = b.EndTime;
+            //    }
+            //}
         }
 
         private static MenuItem GetMenuItems(Menu menu)

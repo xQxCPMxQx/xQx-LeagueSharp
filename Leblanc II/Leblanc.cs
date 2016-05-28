@@ -33,7 +33,7 @@ namespace Leblanc
             Modes.ModeConfig.Init();
             Common.CommonItems.Init();
 
-            Game.PrintChat("<font color='#ff3232'>Successfully Loaded: </font><font color='#d4d4d4'><font color='#FFFFFF'>" + ChampionName + "</font> III Beta");
+            Game.PrintChat("<font color='#ff3232'>Successfully Loaded: </font><font color='#d4d4d4'><font color='#FFFFFF'>" + ChampionName + "</font> II Beta");
 
             Console.Clear();
         }

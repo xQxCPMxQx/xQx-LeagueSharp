@@ -1233,6 +1233,11 @@ namespace Leblanc.Evade
 
         private static void Drawing_OnDraw(EventArgs args)
         {
+            if (!Modes.ModeDraw.MenuLocal.Item("Draw.Enable").GetValue<bool>())
+            {
+                return;
+            }
+
             if (!Config.Menu.Item("EnableDrawings").GetValue<bool>())
             {
                 return;

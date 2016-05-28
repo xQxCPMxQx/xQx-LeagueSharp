@@ -16,13 +16,15 @@ namespace Leblanc.Modes
     enum ActiveComboMode
     {
         Mode2xQ,
-        Mode2xW
+        Mode2xW,
+        ModeAuto
     }
 
     enum ComboMode
     {
-        Mode2xQ = 1,
-        Mode2xW = 2
+        Mode2xQ = 0,
+        Mode2xW = 1,
+        ModeAuto = 2
     }
 
 
@@ -82,12 +84,15 @@ namespace Leblanc.Modes
             {
                 switch (MenuLocal.Item("Combo.Mode").GetValue<StringList>().SelectedIndex)
                 {
-                    case 1:
+                    case 0:
                         ActiveComboMode = ActiveComboMode.Mode2xQ;
                         return ComboMode.Mode2xQ;
-                    case 2:
+                    case 1:
                         ActiveComboMode = ActiveComboMode.Mode2xW;
                         return ComboMode.Mode2xW;
+                    case 2:
+                        ActiveComboMode = ActiveComboMode.ModeAuto;
+                        return ComboMode.ModeAuto;
                 }
 
                 return ComboMode.Mode2xQ;
@@ -99,7 +104,7 @@ namespace Leblanc.Modes
 
             MenuLocal = new LeagueSharp.Common.Menu("Combo", "Combo").SetFontStyle(FontStyle.Regular, Color.GreenYellow);
             {
-                MenuLocal.AddItem(new MenuItem("Combo.Mode", "Combo Mode:").SetValue(new StringList(new[] {"Q:R", "W:R"}, 1)).SetFontStyle(FontStyle.Regular, Color.GreenYellow));
+                MenuLocal.AddItem(new MenuItem("Combo.Mode", "Combo Mode:").SetValue(new StringList(new[] {"Q:R", "W:R", "Auto"}, 1)).SetFontStyle(FontStyle.Regular, Color.GreenYellow));
 
 
                 //MenuLocal.AddItem(new MenuItem("Combo.Mode.QR", CommonHelper.Tab + "Q x R for Single Target:").SetValue(new StringList(new[] {"if 1 v 1", "if Priority Target are killable", "Both"}, 0)));
@@ -119,22 +124,9 @@ namespace Leblanc.Modes
                 MenuLocal.AddItem(new MenuItem("Combo.UseW.Far", "W: Jump for killable distant enemy").SetValue(new StringList(new[] { "Off", "On" }, 1)).SetFontStyle(FontStyle.Regular, Champion.PlayerSpells.W.MenuColor()));
 
                 MenuLocal.AddItem(new MenuItem("Combo.UseE", "E:").SetValue(new StringList(new[]{"Off", "On"}, 1)).SetFontStyle(FontStyle.Regular, Champion.PlayerSpells.W.MenuColor()));
+                MenuLocal.AddItem(new MenuItem("Combo.Ignite", "Ignite:").SetValue(new StringList(new[] { "Off", "On" }, 1)).SetFontStyle(FontStyle.Regular, Champion.PlayerSpells.W.MenuColor()));
                 Modes.ModeConfig.MenuConfig.AddSubMenu(MenuLocal);
             }
-
-            //MenuHunt = new Menu("Combo Hunt List", "Menu.Hunt").SetFontStyle(FontStyle.Regular, Color.GreenYellow);
-            //{
-            //    MenuHunt.AddItem(
-            //        new MenuItem("Hunt.Active", "Hunt Mode Active").SetValue(new KeyBind('H', KeyBindType.Toggle))
-            //            .SetFontStyle(FontStyle.Regular, Color.GreenYellow))
-            //        .Permashow(true, ObjectManager.Player.ChampionName + " | Hunt Mode", Color.AliceBlue);
-            //    foreach (var e in HeroManager.Enemies)
-            //    {
-            //        MenuHunt.AddItem(new MenuItem("Hunt." + e.ChampionName, e.ChampionName).SetValue(false));
-            //        //MenuHunt.AddItem(new MenuItem("Hunt." + e.ChampionName, e.ChampionName).SetValue(new Slider(GetPriority(e.ChampionName), 1, 3)));
-            //    }
-            //    Modes.ModeConfig.MenuConfig.AddSubMenu(MenuHunt);
-            //}
 
             Game.OnUpdate += GameOnOnUpdate;
             Game.OnWndProc += Game_OnWndProc;
@@ -142,74 +134,29 @@ namespace Leblanc.Modes
             Drawing.OnDraw += DrawingHutMode;
         }
 
-        private static Obj_AI_Hero GetKillableTarget
+        private static int GetWHits(Obj_AI_Base target, List<Obj_AI_Base> targets = null)
         {
-            get
+            if (targets != null && (ComboMode == ComboMode.Mode2xW || ComboMode == ComboMode.ModeAuto))
             {
-                var enemy =
-                    HeroManager.Enemies.FirstOrDefault(
-                        e =>
-                            !e.IsDead && e.IsVisible && e.IsValidTarget(W.Range*2 + Q.Range) &&
-                            MenuHunt.Item("Hunt." + e.ChampionName).GetValue<bool>());
-
-                if (enemy != null)
+                targets = targets.Where(t => t.IsValidTarget((W.Range + W.Width))).ToList();
+                var pred = W.GetPrediction(target);
+                if (pred.Hitchance >= HitChance.Medium)
                 {
-                    return enemy;
+                    var circle = new Geometry.Polygon.Circle(pred.UnitPosition, target.BoundingRadius + W.Width);
+                    circle.Draw(System.Drawing.Color.Aqua, 5);
+
+                    return 1 + (from t in targets.Where(x => x.NetworkId != target.NetworkId)
+                        let pred2 = W.GetPrediction(t)
+                        where pred2.Hitchance >= HitChance.Medium
+                        select new Geometry.Polygon.Circle(pred2.UnitPosition, t.BoundingRadius*0.9f)).Count(
+                            circle2 => circle2.Points.Any(p => circle.IsInside(p)));
                 }
-
-                var killableEnemy =
-                    HeroManager.Enemies.FirstOrDefault(
-                        e =>
-                            !e.IsDead && e.IsVisible && e.IsValidTarget(W.Range) &&
-                            e.Health < GetComboDamage(e));
-
-                if (killableEnemy != null)
-                {
-                    return killableEnemy;
-                }
-
-                return Target;
             }
-        }
-
-        private static Obj_AI_Hero GetTarget
-        {
-            get
+            if (W.IsInRange(target))
             {
-                if (!MenuHunt.Item("Hunt.Active").GetValue<KeyBind>().Active)
-                {
-                    return Target;
-                }
-
-                //var x= HeroManager.Enemies.Where(
-                //    e =>
-                //        !e.IsDead && e.IsVisible && e.IsValidTarget(W.Range * 2 + Q.Range) &&
-                //        MenuHunt.Item("Hunt." + e.ChampionName).GetValue<bool>()).OrderByDescending(e => e.Health).FirstOrDefault();
-                //return x;
-                var enemy =
-                    HeroManager.Enemies.Where(
-                        e =>
-                            !e.IsDead && e.IsVisible &&
-                            e.IsValidTarget(ActiveComboMode == ActiveComboMode.Mode2xQ
-                                ? Q.Range
-                                : (ActiveComboMode == ActiveComboMode.Mode2xW ? W.Range : E.Range)) &&
-                            MenuHunt.Item("Hunt." + e.ChampionName).GetValue<bool>())
-                        .OrderBy(e => e.Health - GetComboDamage(e))
-                        .FirstOrDefault();
-
-                return enemy ?? Target;
-
-                //var killableEnemy =
-                //    HeroManager.Enemies.FirstOrDefault(
-                //        e =>
-                //            !e.IsDead && e.IsVisible && e.IsValidTarget(W.Range) &&
-                //            e.Health < GetComboDamage(e));
-
-                //if (killableEnemy != null)
-                //{
-                //    return killableEnemy;
-                //}
+                return 1;
             }
+            return 0;
         }
 
         private static void DrawingHutMode(EventArgs args)
@@ -218,6 +165,12 @@ namespace Leblanc.Modes
             {
                 return;
             }
+
+            if (!Modes.ModeDraw.MenuLocal.Item("Draw.Enable").GetValue<bool>())
+            {
+                return;
+            }
+
 
             foreach (var e in HeroManager.Enemies.Where(e => !e.IsDead && e.IsVisible))
             {
@@ -241,7 +194,7 @@ namespace Leblanc.Modes
 
                 if (e.Health < GetComboDamage(e))
                 {
-                    Common.CommonGeometry.DrawText(CommonGeometry.Text, ">>> Combo Kill <<<", e.HPBarPosition.X + 7, e.HPBarPosition.Y + 36, SharpDX.Color.White);
+                    Common.CommonGeometry.DrawText(CommonGeometry.Text, "Combo Kill", e.HPBarPosition.X + 8, e.HPBarPosition.Y + 36, SharpDX.Color.GreenYellow);
                 }
             }
         }
@@ -297,7 +250,7 @@ namespace Leblanc.Modes
                     newValue = 0;
                 }
 
-                MenuLocal.Item("Combo.Mode").SetValue(new StringList(new[] { "Q:R", "W:R"}, newValue));
+                MenuLocal.Item("Combo.Mode").SetValue(new StringList(new[] { "Q:R", "W:R", "Auto"}, newValue));
 
                 LastComboChangeKeyTick = Environment.TickCount;
             }
@@ -322,10 +275,25 @@ namespace Leblanc.Modes
 
         private static void DrawingOnOnDraw(EventArgs args)
         {
+            if (MenuGUI.IsShopOpen)
+            {
+                return;
+            }
+
+            if (Target.IsValidTarget(Q.Range*2))
+            {
+                var wComboHits = GetWHits(Target, HeroManager.Enemies.Where(e => e.IsValidTarget(W.Range + W.Width)).Cast<Obj_AI_Base>().ToList());
+            }
             if (ObjectManager.Player.IsDead)
             {
                 return;
             }
+
+            if (!Modes.ModeDraw.MenuLocal.Item("Draw.Enable").GetValue<bool>())
+            {
+                return;
+            }
+
 
             var nTarget = CommonTargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Magical);
             if (nTarget.IsValidTarget() && nTarget.Health < ComboDamage2xW(nTarget))
@@ -340,13 +308,14 @@ namespace Leblanc.Modes
 
             string[] vComboString = new[]
             {
-                "Q : R", "W : R"
+                "Q:R", "W:R", "Auto"
             };
 
             System.Drawing.Color[] vComboColor = new[]
             {
                 System.Drawing.Color.FromArgb(255, 4, 0, 255),
-                System.Drawing.Color.Red
+                System.Drawing.Color.Red,
+                System.Drawing.Color.FromArgb(255, 46, 47, 46),
             };
 
             var nComboMode = MenuLocal.Item("Combo.Mode").GetValue<StringList>().SelectedIndex;
@@ -372,7 +341,7 @@ namespace Leblanc.Modes
             //}
             //Drawing.DrawText(Drawing.Width * 0.45f, Drawing.Height * 0.80f, Color.GreenYellow, xComboStr);
 
-            Common.CommonGeometry.DrawBox(new Vector2(Drawing.Width * 0.45f, Drawing.Height * 0.80f), 115, 18, xComboColor, 1, System.Drawing.Color.Black);
+            Common.CommonGeometry.DrawBox(new Vector2(Drawing.Width * 0.45f, Drawing.Height * 0.80f), 125, 18, xComboColor, 1, System.Drawing.Color.Black);
             Common.CommonGeometry.DrawText(CommonGeometry.Text, xComboString, Drawing.Width * 0.455f, Drawing.Height * 0.803f, SharpDX.Color.Wheat);
 
             //Common.CommonGeometry.DrawBox( new Vector2((int) ObjectManager.Player.HPBarPosition.X + 145, (int) ObjectManager.Player.HPBarPosition.Y + 5), 115, 18, xComboColor, 1, System.Drawing.Color.Black);
@@ -429,40 +398,34 @@ namespace Leblanc.Modes
             }
         }
 
-        private static void GetComboMode()
-        {
-            switch (ComboMode)
-            {
-                case ComboMode.Mode2xQ:
-                {
-                    ActiveComboMode = ActiveComboMode.Mode2xQ;
-                    break;
-                }
-
-                case ComboMode.Mode2xW:
-                {
-                    ActiveComboMode = ActiveComboMode.Mode2xW;
-                    break;
-                }
-            }
-
-        }
-
         private static void GameOnOnUpdate(EventArgs args)
         {
-
-            ExecuteFarCombo();
-
             if (Modes.ModeConfig.Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
             {
-                if (IgniteSlot != SpellSlot.Unknown &&
-                    ObjectManager.Player.Spellbook.CanUseSpell(IgniteSlot) == SpellState.Ready)
+                //Game.PrintChat(Q.Cooldown.ToString());
+                if (Target.IsValidTarget(Q.Range) && CommonHelper.SpellRStatus == CommonHelper.SpellRName.R2xQ && Target.Health < ComboDamage2xQ(Target))
                 {
-                    if (Target.IsValidTarget(650) && !Target.HaveImmortalBuff() &&
-                        ObjectManager.Player.GetSummonerSpellDamage(Target, Damage.SummonerSpell.Ignite) + 150 >=
-                        Target.Health && (!Q.IsReady() || W.StillJumped()))
+                    Q2.CastOnUnit(Target);
+                }
+
+                if (Target.IsValidTarget(W.Range) && CommonHelper.SpellRStatus == CommonHelper.SpellRName.R2xW && Target.Health < ComboDamage2xW(Target))
+                {
+                    W2.Cast(Target);
+                }
+
+                ExecuteFarCombo();
+
+                if (MenuLocal.Item("Combo.Ignite").GetValue<StringList>().SelectedIndex == 1)
+                {
+                    if (IgniteSlot != SpellSlot.Unknown &&
+                        ObjectManager.Player.Spellbook.CanUseSpell(IgniteSlot) == SpellState.Ready)
                     {
-                        ObjectManager.Player.Spellbook.CastSpell(IgniteSlot, Target);
+                        if (Target.IsValidTarget(650) && !Target.HaveImmortalBuff() &&
+                            ObjectManager.Player.GetSummonerSpellDamage(Target, Damage.SummonerSpell.Ignite) + 150 >=
+                            Target.Health && (!Q.IsReady() || W.StillJumped()))
+                        {
+                            ObjectManager.Player.Spellbook.CastSpell(IgniteSlot, Target);
+                        }
                     }
                 }
 
@@ -480,7 +443,14 @@ namespace Leblanc.Modes
                         ActiveComboMode = ActiveComboMode.Mode2xW;
                         ExecuteMode2xW();
                         break;
-                    } 
+                    }
+
+                    case ComboMode.ModeAuto:
+                    {
+                        ActiveComboMode = ActiveComboMode.ModeAuto;
+                        ExecuteModeAuto();
+                        break;
+                    }
                 }
                 ExecuteSpells();
             }
@@ -548,7 +518,7 @@ namespace Leblanc.Modes
                     Champion.PlayerSpells.CastQ(Target);
                 }
 
-                if (ActiveComboMode == ActiveComboMode.Mode2xW)
+                if (ActiveComboMode == ActiveComboMode.Mode2xW || ActiveComboMode == ActiveComboMode.ModeAuto)
                 {
                     if (MenuLocal.Item("Combo.UseE").GetValue<StringList>().SelectedIndex != 0)
                     {
@@ -562,13 +532,10 @@ namespace Leblanc.Modes
                         Champion.PlayerSpells.CastW(Target);
                     }
                 }
-
             }
             else
             {
-                if (!Q.IsReady() && ActiveComboMode == ActiveComboMode.Mode2xQ  
-                    && CommonHelper.SpellRStatus != CommonHelper.SpellRName.R2xQ 
-                    && Q.Cooldown > 1)
+                if (!Q.IsReady() && ActiveComboMode == ActiveComboMode.Mode2xQ && CommonHelper.SpellRStatus != CommonHelper.SpellRName.R2xQ && Q.Cooldown > 1)
                 {
                     if (MenuLocal.Item("Combo.UseW").GetValue<StringList>().SelectedIndex != 0)
                     {
@@ -581,10 +548,7 @@ namespace Leblanc.Modes
                     }
                 }
 
-                if (ActiveComboMode == ActiveComboMode.Mode2xW &&
-                    CommonHelper.SpellRStatus != CommonHelper.SpellRName.R2xW 
-                    && (W.StillJumped() || W.Cooldown > 1)
-                    )
+                if (ActiveComboMode == ActiveComboMode.Mode2xW && CommonHelper.SpellRStatus != CommonHelper.SpellRName.R2xW  && (W.StillJumped() || W.Cooldown > 1))
                 {
                     Champion.PlayerSpells.CastQ(Target);
 
@@ -595,6 +559,26 @@ namespace Leblanc.Modes
 
                 }
             }
+        }
+
+        static bool CanCastCombo(ComboMode comboMode)
+        {
+            if (!R.IsReady())
+            {
+                return false;
+            }
+
+            if (comboMode == ComboMode.Mode2xQ && Q.IsReady())
+            {
+                return true;
+            }
+
+            if (comboMode == ComboMode.Mode2xW && W.IsReady())
+            {
+                return true;
+            }
+
+            return false;
         }
 
         private static void ExecuteMode2xQ()
@@ -627,6 +611,55 @@ namespace Leblanc.Modes
 
             Champion.PlayerSpells.CastW(Target);
             Champion.PlayerSpells.CastW2(Target);
+        }
+
+        private static void ExecuteModeAuto()
+        {
+            if (!R.IsReady())
+            {
+                return;
+            }
+
+            var find = HeroManager.Enemies.Find(e => e.NetworkId != Target.NetworkId && e.Distance(Target) <= W.Width);
+            if (find != null && CanCastCombo(ComboMode.Mode2xW))
+            {
+                var wComboHits = GetWHits(Target, HeroManager.Enemies.Where(e => e.IsValidTarget(W.Range + W.Width)).Cast<Obj_AI_Base>().ToList());
+
+                if (wComboHits >= 2)
+                {
+                    ExecuteMode2xW();
+                }
+                return;
+            }
+
+            if (find == null && CanCastCombo(ComboMode.Mode2xQ))
+            {
+                ExecuteMode2xQ();
+            }
+
+            if (Q.IsReady() && !W.IsReady())
+            {
+                ExecuteMode2xQ();
+                return;
+            }
+
+            if (!Q.IsReady() && W.IsReady())
+            {
+                ExecuteMode2xW();
+                return;
+            }
+
+            if (Target.IsValidTarget(Q.Range) && CommonHelper.SpellRStatus == CommonHelper.SpellRName.R2xQ)
+            {
+                Q2.CastOnUnit(Target);
+                return;
+            }
+
+            if (Target.IsValidTarget(W.Range) && CommonHelper.SpellRStatus == CommonHelper.SpellRName.R2xW)
+            {
+                W2.Cast(Target);
+                return;
+            }
         }
 
         private static List<List<Vector2>> GetCombinations(List<Vector2> allValues)

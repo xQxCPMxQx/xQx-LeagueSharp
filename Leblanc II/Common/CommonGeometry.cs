@@ -98,7 +98,7 @@ namespace Leblanc.Common
                     Height = 13,
                     OutputPrecision = FontPrecision.Default,
                     Quality = FontQuality.Draft,
-                    //Weight = FontWeight.Bold
+                    Weight = FontWeight.Bold
                 });
             TextPassive = new Font(
                Drawing.Direct3DDevice,

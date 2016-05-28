@@ -27,6 +27,11 @@ namespace Leblanc.Modes
             Game.OnUpdate += OnUpdate;
             Drawing.OnDraw += delegate(EventArgs args)
             {
+                if (!Modes.ModeDraw.MenuLocal.Item("Draw.Enable").GetValue<bool>())
+                {
+                    return;
+                }
+
                 if (!ModeConfig.MenuKeys.Item("Key.Flee").GetValue<KeyBind>().Active)
                 {
                     return;
