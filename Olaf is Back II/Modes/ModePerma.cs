@@ -23,7 +23,7 @@ namespace Olaf.Modes
         {
             if (Modes.ModeConfig.Orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.Combo && !ObjectManager.Player.IsRecalling())
             {
-                if (Modes.ModeSettings.MenuSpellE.Item("MenuE.E.Auto").GetValue<StringList>().SelectedIndex == 1)
+                if (Modes.ModeSettings.MenuLocal.Item("Settings.E.Auto").GetValue<StringList>().SelectedIndex == 1)
                 {
                     var t = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Physical);
                     if (t.IsValidTarget())

@@ -246,7 +246,7 @@ namespace Olaf.Common
 
         public static float ToggleMinManaPercent
             =>
-               ModeConfig.MenuFarm.Item("Farm.MinMana.Enable").GetValue<KeyBind>().Active
+                ModeConfig.MenuFarm.Item("Farm.MinMana.Enable").GetValue<KeyBind>().Active
                     ? MenuLocal.Item("MinMana.Toggle").GetValue<Slider>().Value
                     : 0f;
 

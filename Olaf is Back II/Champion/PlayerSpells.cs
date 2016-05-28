@@ -19,15 +19,16 @@ namespace Olaf.Champion
         public static void Init()
         {
             Q = new Spell(SpellSlot.Q, 980);
-            Q.SetSkillshot(0.25f, 75f, 1500f, false, SkillshotType.SkillshotLine);
+            Q.SetSkillshot(0.20f, 75f, 1500f, false, SkillshotType.SkillshotLine);
 
             W = new Spell(SpellSlot.W);
             E = new Spell(SpellSlot.E, 325);
             R = new Spell(SpellSlot.R);
 
-            SpellList.AddRange(new[] { Q, W, E, R });
+            SpellList.AddRange(new[] {Q, W, E, R});
             Spellbook.OnCastSpell += Spellbook_OnCastSpell;
         }
+
         private static int LastSeen(Obj_AI_Base t)
         {
             return Common.AutoBushHelper.EnemyInfo.Find(x => x.Player.NetworkId == t.NetworkId).LastSeenForE;
@@ -43,9 +44,11 @@ namespace Olaf.Champion
                 {
                     return;
                 }
-                // args.Process = !t.HaveImmortalBuff();
 
-                args.Process = Environment.TickCount - LastSeen(t) >= (Modes.ModeSettings.MenuLocal.Item("Settings.SpellCast.VisibleDelay").GetValue<StringList>().SelectedIndex + 1) * 250;
+                args.Process = Environment.TickCount - LastSeen(t) >=
+                               (Modes.ModeSettings.MenuLocal.Item("Settings.SpellCast.VisibleDelay")
+                                   .GetValue<StringList>()
+                                   .SelectedIndex + 1)*250;
             }
         }
 
@@ -61,11 +64,38 @@ namespace Olaf.Champion
                 return;
             }
 
+            
+            var nDistance = ObjectManager.Player.Distance(t);
+            var nExtend = 0;
+
+            if (nDistance < 300)
+            {
+                nExtend = 40;
+            }
+            else if (nDistance >= 300 && nDistance < 500)
+            {
+                nExtend = 60;
+            }
+            else if (nDistance >= 500 && nDistance < 700)
+            {
+                nExtend = 80;
+            }
+            else if (nDistance >= 700 && nDistance < Q.Range)
+            {
+                nExtend = 100;
+            }
+
             PredictionOutput qPredictionOutput = Q.GetPrediction(t);
-            Vector3 castPosition = qPredictionOutput.CastPosition.Extend(ObjectManager.Player.Position, - (ObjectManager.Player.Distance(t.ServerPosition) >= 450 ? 80 : 140));
+            Vector3 castPosition = qPredictionOutput.CastPosition.Extend(ObjectManager.Player.Position, -nExtend);
+            HitChance[] hitChances = new[]
+            {
+                HitChance.VeryHigh, HitChance.High, HitChance.Medium, HitChance.Low
+            };
 
             if (qPredictionOutput.Hitchance >=
-                (ObjectManager.Player.Distance(t.ServerPosition) >= 350 ? HitChance.VeryHigh : HitChance.High) &&
+                (ObjectManager.Player.Distance(t.ServerPosition) >= 350
+                    ? HitChance.VeryHigh
+                    : hitChances[Modes.ModeSettings.QHitchance]) &&
                 ObjectManager.Player.Distance(castPosition) < range)
             {
                 Q.Cast(castPosition);
