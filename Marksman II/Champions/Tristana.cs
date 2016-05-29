@@ -338,6 +338,7 @@ namespace Marksman.Champions
 
         public override void Drawing_OnDraw(EventArgs args)
         {
+            return;
             if (ObjectManager.Player.IsDead)
             {
                 return;

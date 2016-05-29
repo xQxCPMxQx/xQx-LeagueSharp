@@ -125,9 +125,7 @@ namespace Marksman.Champions
 
                         case 3:
                         {
-                            if (t.Distance(ObjectManager.Player.Position) >
-                                Orbwalking.GetRealAutoAttackRange(null) &&
-                                Q.IsPositionSafe(t.Position.To2D()))
+                            if (t.Distance(ObjectManager.Player.Position) > Orbwalking.GetRealAutoAttackRange(null) && Q.IsPositionSafe(t.Position.To2D()))
                             {
                                 Q.Cast(t.Position);
                             }
@@ -332,7 +330,7 @@ namespace Marksman.Champions
 
         public override bool DrawingMenu(Menu config)
         {
-            config.AddItem(
+          config.AddItem(
                 new MenuItem("DrawQ" + Id, "Q range").SetValue(new StringList(new[] {"Off", "Q Range", "Q + AA Range"},
                     2)));
             config.AddItem(
@@ -344,6 +342,7 @@ namespace Marksman.Champions
 
         public override void Drawing_OnDraw(EventArgs args)
         {
+            return;
             var drawE = GetValue<StringList>("DrawE").SelectedIndex;
             if (E.IsReady() && drawE != 0)
             {

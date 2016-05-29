@@ -29,14 +29,9 @@ namespace Marksman
         public static Menu MenuActivator;
 
         public static Menu MenuExtraTools { get; set; }
+        public static Menu MenuExtraToolsActivePackets { get; set; }
 
         public static Champion CClass;
-
-        public static Utils.AutoLevel AutoLevel;
-
-        public static AutoPink AutoPink;
-
-        public static AutoBushRevealer AutoBushRevealer;
 
         static SpellSlot IgniteSlot = ObjectManager.Player.GetSpellSlot("summonerdot");
 
@@ -149,43 +144,66 @@ namespace Marksman
 
             MenuExtraTools = new Menu("Extra Tools", "ExtraTools").SetFontStyle(FontStyle.Regular, Color.Aqua);
             {
-                MenuExtraTools.AddItem(new MenuItem("ExtraTools.Orbwalker", "Orbwalker:")).SetValue(new StringList(new []{ "LeagueSharp Common", "Marksman (With Attack Speed Limitter)"}));
-                MenuExtraTools.AddItem(new MenuItem("ExtraTools.Prediction", "Prediction:")).SetValue(new StringList(new[] { "LeagueSharp Common", "SPrediction (Synx)"}));
-                MenuExtraTools.AddItem(new MenuItem("ExtraTools.AutoLevel", "Auto Leveller:")).SetValue(false);
-                MenuExtraTools.AddItem(new MenuItem("ExtraTools.AutoBush", "Auto Bush Ward:")).SetValue(false);
-                MenuExtraTools.AddItem(new MenuItem("ExtraTools.AutoPink", "Auto Pink Ward:")).SetValue(false);
-                MenuExtraTools.AddItem(new MenuItem("ExtraTools.BuffTimer", "Buff Time Manager:")).SetValue(false);
-                MenuExtraTools.AddItem(new MenuItem("ExtraTools.Potition", "Potition Manager:")).SetValue(false);
-                MenuExtraTools.AddItem(new MenuItem("ExtraTools.Summoners", "Summoner Manager:")).SetValue(false);
-                MenuExtraTools.AddItem(new MenuItem("ExtraTools.Tracker", "Tracker:")).SetValue(false);
-                MenuExtraTools.AddItem(new MenuItem("ExtraTools.Skin", "Skin Manager:")).SetValue(false);
-                MenuExtraTools.AddItem(new MenuItem("ExtraTools.Reload", "Press F5 for Load Extra Tools!")).SetFontStyle(FontStyle.Bold, Color.GreenYellow);
+                var nMenuExtraToolsPackets = new Menu("Available Tools", "MenuExtraTools.Available");
+                nMenuExtraToolsPackets.AddItem(new MenuItem("ExtraTools.Prediction", "Prediction:")).SetValue(new StringList(new[] { "LeagueSharp Common", "SPrediction (Synx)"})).SetFontStyle(FontStyle.Regular, Color.Gray);
+                nMenuExtraToolsPackets.AddItem(new MenuItem("ExtraTools.AutoLevel", "Auto Leveller:")).SetValue(false);
+                nMenuExtraToolsPackets.AddItem(new MenuItem("ExtraTools.AutoBush", "Auto Bush Ward:")).SetValue(false);
+                nMenuExtraToolsPackets.AddItem(new MenuItem("ExtraTools.AutoPink", "Auto Pink Ward:")).SetValue(false).SetTooltip("For rengar / vayne / shaco etc.");
+                nMenuExtraToolsPackets.AddItem(new MenuItem("ExtraTools.Skin", "Skin Manager:")).SetValue(false);
+                nMenuExtraToolsPackets.AddItem(new MenuItem("ExtraTools.Emote", "Emote:")).SetValue(false);
+                nMenuExtraToolsPackets.AddItem(new MenuItem("ExtraTools.BuffTimer", "Buff Time Manager:")).SetValue(false).SetFontStyle(FontStyle.Regular, Color.Gray);
+                nMenuExtraToolsPackets.AddItem(new MenuItem("ExtraTools.Potition", "Potition Manager:")).SetValue(false).SetFontStyle(FontStyle.Regular, Color.Gray);
+                nMenuExtraToolsPackets.AddItem(new MenuItem("ExtraTools.Summoners", "Summoner Manager:")).SetValue(false).SetFontStyle(FontStyle.Regular, Color.Gray);
+                nMenuExtraToolsPackets.AddItem(new MenuItem("ExtraTools.Tracker", "Tracker:")).SetValue(false).SetFontStyle(FontStyle.Regular, Color.Gray);
+                
+                nMenuExtraToolsPackets.AddItem(new MenuItem("ExtraTools.Reload", "Press F5 for Load Extra Tools!")).SetFontStyle(FontStyle.Bold, Color.GreenYellow);
+
+                MenuExtraTools.AddSubMenu(nMenuExtraToolsPackets);
+
+                MenuExtraToolsActivePackets = new Menu("Installed Tools", "MenuExtraTools.Installed").SetFontStyle(FontStyle.Regular, Color.GreenYellow);
+                MenuExtraTools.AddSubMenu(MenuExtraToolsActivePackets);
             }
             Config.AddSubMenu(MenuExtraTools);
 
             OrbWalking = Config.AddSubMenu(new Menu("Orbwalking", "Orbwalking"));
             CClass.Orbwalker = new Orbwalking.Orbwalker(OrbWalking);
+
             Orbwalking.Orbwalker Orbwalker = new Orbwalking.Orbwalker(OrbWalking);
-            OrbWalking.AddItem(new MenuItem("Orb.AutoWindUp", "Marksman - Auto Windup").SetValue(false)).ValueChanged += (sender, argsEvent) => { if (argsEvent.GetNewValue<bool>()) CheckAutoWindUp(); };
+            OrbWalking.AddItem(new MenuItem("Orb.AutoWindUp", "Marksman - Auto Windup").SetValue(false)).ValueChanged +=
+                (sender, argsEvent) =>
+                {
+                    if (argsEvent.GetNewValue<bool>())
+                    {
+                        CheckAutoWindUp();
+                    } 
+                };
 
             MenuActivator = new Menu("Activator", "Activator").SetFontStyle(FontStyle.Regular, SharpDX.Color.Aqua);
             {
                 if (MenuExtraTools.Item("ExtraTools.AutoLevel").GetValue<bool>())
                 {
-                    AutoLevel = new Utils.AutoLevel();
+                    Common.CommonAutoLevel.Init(MenuExtraToolsActivePackets);
                 }
 
                 if (MenuExtraTools.Item("ExtraTools.AutoPink").GetValue<bool>())
                 {
-                    AutoPink = new Utils.AutoPink();
-                    AutoPink.Initialize();
+                    Common.CommonAutoPink.Initialize(MenuExtraToolsActivePackets);
                 }
 
                 if (MenuExtraTools.Item("ExtraTools.AutoBush").GetValue<bool>())
                 {
-                    AutoBushRevealer = new AutoBushRevealer();
+                    Common.CommonAutoBush.Init(MenuExtraToolsActivePackets);
                 }
 
+                if (MenuExtraTools.Item("ExtraTools.Skin").GetValue<bool>())
+                {
+                    Common.CommonSkinManager.Init(MenuExtraToolsActivePackets);
+                }
+
+                if (MenuExtraTools.Item("ExtraTools.Emote").GetValue<bool>())
+                {
+                    Common.CommonEmote.Init(MenuExtraToolsActivePackets);
+                }
 
                 /* Menu Items */
                 var items = MenuActivator.AddSubMenu(new Menu("Items", "Items"));
@@ -521,8 +539,7 @@ namespace Marksman
                 ? Config.Item("LaneMana.Alone").GetValue<Slider>().Value
                 : Config.Item("LaneMana.Enemy").GetValue<Slider>().Value;
 
-            CClass.LaneClearActive = CClass.Config.Item("LaneClear").GetValue<KeyBind>().Active &&
-                                     ObjectManager.Player.ManaPercent >= vLaneClearManaPer && Config.Item("Lane.Enabled").GetValue<KeyBind>().Active;
+            CClass.LaneClearActive = CClass.Config.Item("LaneClear").GetValue<KeyBind>().Active && ObjectManager.Player.ManaPercent >= vLaneClearManaPer && Config.Item("Lane.Enabled").GetValue<KeyBind>().Active;
 
             CClass.JungleClearActive = false;
             if (CClass.Config.Item("LaneClear").GetValue<KeyBind>().Active && Config.Item("Jungle.Enabled").GetValue<KeyBind>().Active)

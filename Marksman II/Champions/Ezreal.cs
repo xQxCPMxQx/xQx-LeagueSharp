@@ -52,7 +52,7 @@ namespace Marksman.Champions
 
             Utils.PrintMessage("Ezreal loaded. Added Charge R Option. Please check the misc menu");
         }
-
+      
         public override void Orbwalking_AfterAttack(AttackableUnit unit, AttackableUnit target)
         {
             var t = target as Obj_AI_Hero;
@@ -89,6 +89,8 @@ namespace Marksman.Champions
 
         public override void Drawing_OnDraw(EventArgs args)
         {
+            return;
+            
             Spell[] spellList = {Q, W};
             foreach (var spell in spellList)
             {

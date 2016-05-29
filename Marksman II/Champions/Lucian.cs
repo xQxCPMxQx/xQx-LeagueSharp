@@ -106,6 +106,7 @@ namespace Marksman.Champions
 
         public override void Drawing_OnDraw(EventArgs args)
         {
+            return;
             Spell[] spellList = { Q, Q2, W, E, R };
             foreach (var spell in spellList)
             {
@@ -194,8 +195,12 @@ namespace Marksman.Champions
                 }
             }
 
-            
-            if ((!ComboActive && !HarassActive)) return;
+
+            if ((!ComboActive && !HarassActive))
+            {
+                return;
+            }
+
             var useQExtended = GetValue<StringList>("UseQExtendedC").SelectedIndex;
             if (useQExtended != 0)
             {
@@ -258,6 +263,7 @@ namespace Marksman.Champions
                 if (t.IsValidTarget(Q.Range))
                 {
                     Q.CastOnUnit(t);
+                    Orbwalking.ResetAutoAttackTimer();
                 }
             }
 
@@ -267,16 +273,29 @@ namespace Marksman.Champions
                 if (t.IsValidTarget(W.Range))
                 {
                     W.Cast(t);
+                    Orbwalking.ResetAutoAttackTimer();
                 }
             }
 
             var useE = GetValue<StringList>("UseEC").SelectedIndex;
             if (useE != 0 && E.IsReady())
             {
-                if (t.IsValidTarget(Q.Range))
+                if (t.Distance(ObjectManager.Player.Position) > Orbwalking.GetRealAutoAttackRange(null) && t.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + E.Range - 50) && E.IsPositionSafe(t.Position.To2D()))
+                {
+                    E.Cast(t.Position);
+                    Orbwalking.ResetAutoAttackTimer();
+                }
+                else if (Q.IsPositionSafe(Game.CursorPos.To2D()))
                 {
                     E.Cast(Game.CursorPos);
+                    Orbwalking.ResetAutoAttackTimer();
                 }
+                Orbwalker.ForceTarget(t);
+
+                //if (t.IsValidTarget(Q.Range))
+                //{
+                //    E.Cast(Game.CursorPos);
+                //}
             }
         }
 
@@ -496,6 +515,11 @@ namespace Marksman.Champions
             return true;
         }
 
+        private bool LucianHavePassiveBuff()
+        {
+            return ObjectManager.Player.Buffs.Any(buff => buff.DisplayName == "LucianPassive");
+        }
+
         public override void PermaActive()
         {
             if (Orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.Combo)
@@ -506,20 +530,15 @@ namespace Marksman.Champions
             var enemy = HeroManager.Enemies.Find(e => e.IsValidTarget(E.Range + (Q.IsReady() ? Q.Range : Orbwalking.GetRealAutoAttackRange(null) + 65)) && !e.IsZombie);
             if (enemy != null)
             {
-                if (enemy.Health < ObjectManager.Player.TotalAttackDamage*2)
+                if (enemy.Health < ObjectManager.Player.TotalAttackDamage*2 && !LucianHavePassiveBuff() && enemy.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + 65) && !Q.IsReady())
                 {
-                    if (enemy.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + 65))
+                    if (W.IsReady() && GetValue<bool>("UseWC"))
                     {
-                        if (!Q.IsReady())
-                        {
-                            if (W.IsReady() && GetValue<bool>("UseWC"))
-                                W.Cast();
-                        }
+                        W.Cast(enemy.Position);
                     }
-                    else
+                    else if (E.IsReady() && GetValue<StringList>("UseEC").SelectedIndex != 0)
                     {
-                        if (E.IsReady() && GetValue<StringList>("UseEC").SelectedIndex != 0)
-                            E.Cast(enemy.Position);
+                        E.Cast(enemy.Position);
                     }
                 }
 
