@@ -104,6 +104,7 @@ namespace Marksman.Champions
 
         public override void ExecuteLaneClear()
         {
+            return;
             var prepareMinions = Program.Config.Item("PrepareMinionsE.Lane").GetValue<StringList>().SelectedIndex;
             if (prepareMinions != 0)
             {
