@@ -53,7 +53,7 @@ namespace Marksman.Common
 
         private static void GameOnOnNotify(GameNotifyEventArgs args)
         {
-            if (!LocalMenu.Item("Emote.Enabled").GetValue<bool>())
+            if (!LocalMenu.Item("Emote.Enable").GetValue<bool>())
             {
                 return;
             }
