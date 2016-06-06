@@ -1,8 +1,10 @@
 #region
 
 using System;
+using System.Collections.Generic;
 using LeagueSharp;
 using LeagueSharp.Common;
+using Marksman.Common;
 using SharpDX;
 using Color = System.Drawing.Color;
 
@@ -21,15 +23,17 @@ namespace Marksman.Champions
 
         public Spell E;
 
-        public Spell Q;
+        public static Spell Q;
 
         public bool ShowUlt;
 
         public string UltTarget;
 
-        public Spell W;
+        public static Spell W;
 
         private bool canCastR = true;
+
+        private string[] dangerousEnemies = new[] {"Zed", "Fizz", "Rengar", "JarvanIV", "Irelia", "Amumu", "DrMundo", "Ryze"};
 
         public Caitlyn()
         {
@@ -38,8 +42,8 @@ namespace Marksman.Champions
             E = new Spell(SpellSlot.E, 800);
             R = new Spell(SpellSlot.R, 2000);
 
-            Q.SetSkillshot(0.25f, 60f, 2000f, false, SkillshotType.SkillshotLine);
-            E.SetSkillshot(0.25f, 80f, 1600f, true, SkillshotType.SkillshotLine);
+            Q.SetSkillshot(0.50f, 50f, 2000f, false, SkillshotType.SkillshotLine);
+            E.SetSkillshot(0.25f, 60f, 1600f, true, SkillshotType.SkillshotLine);
 
             AntiGapcloser.OnEnemyGapcloser += AntiGapcloser_OnEnemyGapcloser;
             Drawing.OnEndScene += DrawingOnOnEndScene;
@@ -79,17 +83,16 @@ namespace Marksman.Champions
 
         public void AntiGapcloser_OnEnemyGapcloser(ActiveGapcloser gapcloser)
         {
+            
 
             if (Program.Config.Item("Misc.AntiGapCloser").GetValue<bool>())
             {
                 return;
             }
 
-            
-
             if (E.IsReady() && gapcloser.Sender.IsValidTarget(E.Range))
             {
-                E.CastOnUnit(gapcloser.Sender);
+                //E.CastOnUnit(gapcloser.Sender);
             }
         }
 
@@ -107,6 +110,16 @@ namespace Marksman.Champions
 
         public override void Drawing_OnDraw(EventArgs args)
         {
+            var enemies = HeroManager.Enemies.Where(e => e.IsValidTarget(E.Range * 2));
+            IEnumerable<Obj_AI_Hero> nResult =
+                (from e in enemies join d in dangerousEnemies on e.ChampionName equals d select e)
+                    .Distinct();
+
+            foreach (var n in nResult)
+            {
+                Render.Circle.DrawCircle(n.Position, n.AttackRange * 3, Color.GreenYellow);
+            }
+
             Spell[] spellList = { Q, E, R };
             foreach (var spell in spellList)
             {
@@ -119,6 +132,45 @@ namespace Marksman.Champions
             {
                 //var playerPos = Drawing.WorldToScreen(ObjectManager.Player.Position);
                 //Drawing.DrawText(playerPos.X - 65, playerPos.Y + 20, drawUlt.Color, "Hit R To kill " + UltTarget + "!");
+            }
+        }
+
+        static void CastQ(Obj_AI_Base t)
+        {
+            if (t.IsValidTarget() && Q.IsReady() && ObjectManager.Player.Distance(t.ServerPosition) <= Q.Range)
+            {
+                if (Q.CastIfHitchanceEquals(t, Q.GetHitchance()))
+                {
+                    Q.Cast(t);
+                }
+                return;
+                var qPrediction = Q.GetPrediction(t);
+                var hithere = qPrediction.CastPosition.Extend(ObjectManager.Player.Position, -140);
+
+                if (qPrediction.Hitchance >= Q.GetHitchance())
+                {
+                    Q.Cast(hithere);
+                }
+            }
+        }
+
+        static void CastW(Obj_AI_Base t)
+        {
+            if (t.IsValidTarget(W.Range))
+            {
+                BuffType[] buffList =
+                {
+                    BuffType.Fear,
+                    BuffType.Taunt,
+                    BuffType.Stun,
+                    BuffType.Slow,
+                    BuffType.Snare
+                };
+
+                foreach (var b in buffList.Where(t.HasBuffOfType))
+                {
+                    W.Cast(t.Position);
+                }
             }
         }
 
@@ -135,6 +187,11 @@ namespace Marksman.Champions
 
         public override void Game_OnGameUpdate(EventArgs args)
         {
+            Console.WriteLine(Q.GetHitchance().ToString());
+            //foreach (var e in HeroManager.Enemies)
+            //{
+            //    Game.PrintChat(e.ChampionName);
+            //}
             R.Range = 500 * (R.Level == 0 ? 1 : R.Level) + 1500;
 
             Obj_AI_Hero t;
@@ -154,12 +211,11 @@ namespace Marksman.Champions
             {
                 t = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical);
                 if (t.IsValidTarget(Q.Range)
-                    && (t.HasBuffOfType(BuffType.Stun) || t.HasBuffOfType(BuffType.Snare)
-                        || t.HasBuffOfType(BuffType.Taunt)
-                        && (t.Health <= ObjectManager.Player.GetSpellDamage(t, SpellSlot.Q)
-                            || !Orbwalking.InAutoAttackRange(t))))
+                    && (t.HasBuffOfType(BuffType.Stun) || t.HasBuffOfType(BuffType.Snare) || t.HasBuffOfType(BuffType.Taunt) && (t.Health <= ObjectManager.Player.GetSpellDamage(t, SpellSlot.Q)
+                            || !Orb.Orbwalking.InAutoAttackRange(t))))
                 {
-                    Q.Cast(t, false, true);
+                    CastQ(t);
+                    //Q.Cast(t, false, true);
                 }
             }
 
@@ -183,10 +239,10 @@ namespace Marksman.Champions
                 ShowUlt = false;
             }
 
-            if (GetValue<KeyBind>("Dash").Active && E.IsReady())
+
             {
                 var pos = ObjectManager.Player.ServerPosition.To2D().Extend(Game.CursorPos.To2D(), -300).To3D();
-                E.Cast(pos, true);
+                //E.Cast(pos, true);
             }
 
             if (GetValue<KeyBind>("UseEQC").Active && E.IsReady() && Q.IsReady())
@@ -197,13 +253,16 @@ namespace Marksman.Champions
                     < ObjectManager.Player.GetSpellDamage(t, SpellSlot.Q)
                     + ObjectManager.Player.GetSpellDamage(t, SpellSlot.E) + 20 && E.CanCast(t))
                 {
-                    E.Cast(t);
-                    Q.Cast(t, false, true);
+                    //E.Cast(t);
+                    CastQ(t);
                 }
             }
 
             // PQ you broke it D:
-            if ((!ComboActive && !HarassActive) || !Orbwalking.CanMove(100)) return;
+            if ((!ComboActive && !HarassActive) || !Orb.Orbwalking.CanMove(100))
+            {
+                return;
+            }
 
             var useQ = GetValue<bool>("UseQ" + (ComboActive ? "C" : "H"));
             var useE = GetValue<bool>("UseEC");
@@ -214,22 +273,32 @@ namespace Marksman.Champions
                 t = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical);
                 if (t != null)
                 {
-                    Q.Cast(t, false, true);
+                    CastQ(t);
                 }
             }
-            else if (E.IsReady() && useE)
+
+            if (E.IsReady() && useE)
             {
-                t = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Physical);
-                if (t != null && t.Health <= E.GetDamage(t))
+                var enemies = HeroManager.Enemies.Where(e => e.IsValidTarget(E.Range));
+                IEnumerable<Obj_AI_Hero> nResult =
+                    (from e in enemies join d in dangerousEnemies on e.ChampionName equals d select e)
+                        .Distinct();
+
+                foreach (var n in nResult)
                 {
-                    E.Cast(t);
+                    if (n.IsValidTarget(n.AttackRange * 3) && E.GetPrediction(n).CollisionObjects.Count == 1)
+                    {
+                        E.Cast(n.Position);
+                        if (W.IsReady())
+                            W.Cast(n.Position);
+                    }
                 }
             }
 
             if (R.IsReady() && useR)
             {
                 t = TargetSelector.GetTarget(R.Range, TargetSelector.DamageType.Physical);
-                if (t != null && t.Health <= R.GetDamage(t) && !Orbwalking.InAutoAttackRange(t) && canCastR)
+                if (t != null && t.Health <= R.GetDamage(t) && !Orb.Orbwalking.InAutoAttackRange(t) && canCastR)
                 {
                     R.CastOnUnit(t);
                 }
@@ -325,7 +394,7 @@ namespace Marksman.Champions
 
                 pos = enemy?.Position ??
                       ObjectManager.Player.ServerPosition.To2D().Extend(Game.CursorPos.To2D(), -300).To3D();
-                E.Cast(pos);
+                //E.Cast(pos);
             }
 
             base.PermaActive();

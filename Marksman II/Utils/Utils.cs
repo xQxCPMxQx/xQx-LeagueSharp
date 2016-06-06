@@ -7,10 +7,12 @@ using System.ComponentModel.Design;
 using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
+using Marksman.Orb;
 using SharpDX;
 using SharpDX.Direct3D9;
 using static LeagueSharp.Common.Packet;
 using Collision = LeagueSharp.Common.Collision;
+using Orbwalking = Marksman.Orb.Orbwalking;
 
 #endregion
 
@@ -728,7 +730,7 @@ namespace Marksman.Utils
         //                    break;
         //                case (int)DrawOption.CloseToMobsAndJungleClearActive:
         //                    if (ObjectManager.Player.Distance(hp.Key)
-        //                        <= Orbwalking.GetRealAutoAttackRange(null) + 65 && Program.CClass.JungleClearActive)
+        //                        <= Orbwalking.GetRealAutoAttackRange(null) + 65 && Program.ChampionClass.JungleClearActive)
         //                    {
         //                        Render.Circle.DrawCircle(hp.Key, CircleRange, hp.Value);
         //                    }

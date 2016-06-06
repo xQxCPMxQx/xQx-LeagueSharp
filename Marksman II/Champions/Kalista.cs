@@ -4,11 +4,14 @@ using System.Collections.Generic;
 using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
+using Marksman.Orb;
 using Marksman.Utils;
 using SharpDX;
 using Color = System.Drawing.Color;
 using SharpDX.Direct3D9;
 using Collision = LeagueSharp.Common.Collision;
+using Orbwalking = Marksman.Orb.Orbwalking;
+
 #endregion
 
 namespace Marksman.Champions
@@ -616,12 +619,12 @@ namespace Marksman.Champions
                 {
                     foreach (var l in objAiMinions.Except(list).ToList())
                     {
-                        Program.CClass.Orbwalker.ForceTarget(l);
+                        Program.ChampionClass.Orbwalker.ForceTarget(l);
                     }
                 }
                 else
                 {
-                    Program.CClass.Orbwalker.ForceTarget(enemy);
+                    Program.ChampionClass.Orbwalker.ForceTarget(enemy);
                 }
             }
 

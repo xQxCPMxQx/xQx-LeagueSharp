@@ -31,7 +31,7 @@ namespace Marksman
         public static Menu MenuExtraTools { get; set; }
         public static Menu MenuExtraToolsActivePackets { get; set; }
 
-        public static Champion CClass;
+        public static Champion ChampionClass;
 
         static SpellSlot IgniteSlot = ObjectManager.Player.GetSpellSlot("summonerdot");
 
@@ -59,9 +59,9 @@ namespace Marksman
         private static void Game_OnGameLoad(EventArgs args)
         {
             Config = new Menu("Marksman", "Marksman", true).SetFontStyle(FontStyle.Regular, SharpDX.Color.GreenYellow);
-            CClass = new Champion();
-
-            var BaseType = CClass.GetType();
+            ChampionClass = new Champion();
+            Common.CommonGeometry.Init();
+            var BaseType = ChampionClass.GetType();
 
             /* Update this with Activator.CreateInstance or Invoke
                http://stackoverflow.com/questions/801070/dynamically-invoking-any-function-by-passing-function-name-as-string 
@@ -72,79 +72,80 @@ namespace Marksman
             switch (championName)
             {
                 case "ashe":
-                    CClass = new Ashe();
+                    ChampionClass = new Ashe();
                     break;
                 case "caitlyn":
-                    CClass = new Caitlyn();
+                    ChampionClass = new Caitlyn();
                     break;
                 case "corki":
-                    CClass = new Corki();
+                    ChampionClass = new Corki();
                     break;
                 case "draven":
-                    CClass = new Draven();
+                    ChampionClass = new Draven();
                     break;
                 case "ezreal":
-                    CClass = new Ezreal();
+                    ChampionClass = new Ezreal();
                     break;
                 case "graves":
-                    CClass = new Graves();
+                    ChampionClass = new Graves();
                     break;
                 case "gnar":
-                    CClass = new Gnar();
+                    ChampionClass = new Gnar();
                     break;
                 case "jinx":
-                    CClass = new Jinx();
+                    ChampionClass = new Jinx();
                     break;
                 case "kalista":
-                    CClass = new Kalista();
+                    ChampionClass = new Kalista();
                     break;
                 case "kindred":
-                    CClass = new Kindred();
+                    ChampionClass = new Kindred();
                     break;
                 case "kogmaw":
-                    CClass = new Kogmaw();
+                    ChampionClass = new Kogmaw();
                     break;
                 case "lucian":
-                    CClass = new Lucian();
+                    ChampionClass = new Lucian();
                     break;
                 case "missfortune":
-                    CClass = new MissFortune();
+                    ChampionClass = new MissFortune();
                     break;
                 case "quinn":
-                    CClass = new Quinn();
+                    ChampionClass = new Quinn();
                     break;
                 case "sivir":
-                    CClass = new Sivir();
+                    ChampionClass = new Sivir();
                     break;
                 case "teemo":
-                    CClass = new Teemo();
+                    ChampionClass = new Teemo();
                     break;
                 case "tristana":
-                    CClass = new Tristana();
+                    ChampionClass = new Tristana();
                     break;
                 case "twitch":
-                    CClass = new Twitch();
+                    ChampionClass = new Twitch();
                     break;
                 case "urgot":
-                    CClass = new Urgot();
+                    ChampionClass = new Urgot();
                     break;
                 case "vayne":
-                    CClass = new Vayne();
+                    ChampionClass = new Vayne();
                     break;
                 case "varus":
-                    CClass = new Varus();
+                    ChampionClass = new Varus();
                     break;
             }
             //Config.DisplayName = "Marksman Lite | " + CultureInfo.CurrentCulture.TextInfo.ToTitleCase(championName);
             Config.DisplayName = "Marksman Lite";
 
-            CClass.Id = ObjectManager.Player.CharData.BaseSkinName;
-            CClass.Config = Config;
+            ChampionClass.Id = ObjectManager.Player.CharData.BaseSkinName;
+            ChampionClass.Config = Config;
 
 
             MenuExtraTools = new Menu("Extra Tools", "ExtraTools").SetFontStyle(FontStyle.Regular, Color.Aqua);
             {
                 var nMenuExtraToolsPackets = new Menu("Available Tools", "MenuExtraTools.Available");
+                nMenuExtraToolsPackets.AddItem(new MenuItem("ExtraTools.Orbwalker", "Orbwalker:")).SetValue(new StringList(new[] { "LeagueSharp Common", "Marksman Orbwalker (With Attack Speed Limiter)" })).SetFontStyle(FontStyle.Regular, Color.Gray);
                 nMenuExtraToolsPackets.AddItem(new MenuItem("ExtraTools.Prediction", "Prediction:")).SetValue(new StringList(new[] { "LeagueSharp Common", "SPrediction (Synx)"})).SetFontStyle(FontStyle.Regular, Color.Gray);
                 nMenuExtraToolsPackets.AddItem(new MenuItem("ExtraTools.AutoLevel", "Auto Leveller:")).SetValue(false);
                 nMenuExtraToolsPackets.AddItem(new MenuItem("ExtraTools.AutoBush", "Auto Bush Ward:")).SetValue(false);
@@ -165,18 +166,24 @@ namespace Marksman
             }
             Config.AddSubMenu(MenuExtraTools);
 
-            OrbWalking = Config.AddSubMenu(new Menu("Orbwalking", "Orbwalking"));
-            CClass.Orbwalker = new Orbwalking.Orbwalker(OrbWalking);
+            Common.CommonSettings.Init(Config);
 
-            Orbwalking.Orbwalker Orbwalker = new Orbwalking.Orbwalker(OrbWalking);
-            OrbWalking.AddItem(new MenuItem("Orb.AutoWindUp", "Marksman - Auto Windup").SetValue(false)).ValueChanged +=
-                (sender, argsEvent) =>
-                {
-                    if (argsEvent.GetNewValue<bool>())
-                    {
-                        CheckAutoWindUp();
-                    } 
-                };
+            OrbWalking = Config.AddSubMenu(new Menu("Orbwalking", "Orbwalking"));
+            ChampionClass.Orbwalker = new Orb.Orbwalking.Orbwalker(OrbWalking);
+            //Orb.Orbwalking.Orbwalker Orbwalker = new Orb.Orbwalking.Orbwalker(OrbWalking);
+
+
+            //if (MenuExtraTools.Item("ExtraTools.Orbwalker").GetValue<StringList>().SelectedIndex == 0)
+            //{
+            //    ChampionClass.OrbwalkerM = new Orbwalking.Orbwalker(OrbWalking);
+            //    Orbwalking.Orbwalker OrbwalkerM = new Orbwalking.Orbwalker(OrbWalking);
+            //}
+
+            //if (MenuExtraTools.Item("ExtraTools.Orbwalker").GetValue<StringList>().SelectedIndex == 1)
+            //{
+            //    ChampionClass.Orbwalker = new Orb.Orbwalking.Orbwalker(OrbWalking);
+            //    Orb.Orbwalking.Orbwalker Orbwalker = new Orb.Orbwalking.Orbwalker(OrbWalking);
+            //}
 
             MenuActivator = new Menu("Activator", "Activator").SetFontStyle(FontStyle.Regular, SharpDX.Color.Aqua);
             {
@@ -218,12 +225,12 @@ namespace Marksman
             Config.AddSubMenu(MenuActivator);
             
             // If Champion is supported draw the extra menus
-            if (BaseType != CClass.GetType())
+            if (BaseType != ChampionClass.GetType())
             {
                 SetSmiteSlot();
 
                 var combo = new Menu("Combo", "Combo").SetFontStyle(FontStyle.Regular, SharpDX.Color.GreenYellow);
-                if (CClass.ComboMenu(combo))
+                if (ChampionClass.ComboMenu(combo))
                 {
                     if (SmiteSlot != SpellSlot.Unknown)
                         combo.AddItem(new MenuItem("ComboSmite", "Use Smite").SetValue(true));
@@ -232,14 +239,14 @@ namespace Marksman
                 }
 
                 var harass = new Menu("Harass", "Harass");
-                if (CClass.HarassMenu(harass))
+                if (ChampionClass.HarassMenu(harass))
                 {
                     harass.AddItem(new MenuItem("HarassMana", "Min. Mana Percent").SetValue(new Slider(50, 100, 0)));
                     Config.AddSubMenu(harass);
                 }
 
                 var laneclear = new Menu("Lane Mode", "LaneClear");
-                if (CClass.LaneClearMenu(laneclear))
+                if (ChampionClass.LaneClearMenu(laneclear))
                 {
                     laneclear.AddItem(new MenuItem("Lane.Enabled", ":: Enable Lane Farm!").SetValue(new KeyBind("L".ToCharArray()[0], KeyBindType.Toggle, true))).Permashow(true, "Marksman | Enable Lane Farm", SharpDX.Color.Aqua);
 
@@ -253,7 +260,7 @@ namespace Marksman
                 }
 
                 var jungleClear = new Menu("Jungle Mode", "JungleClear");
-                if (CClass.JungleClearMenu(jungleClear))
+                if (ChampionClass.JungleClearMenu(jungleClear))
                 {
                     var minManaMenu = new Menu("Min. Mana Settings", "Jungle.MinMana.Title");
                     {
@@ -343,14 +350,14 @@ namespace Marksman
                 /*----------------------------------------------------------------------------------------------------------*/
 
                 var misc = new Menu("Misc", "Misc").SetFontStyle(FontStyle.Regular, SharpDX.Color.DarkOrange);
-                if (CClass.MiscMenu(misc))
+                if (ChampionClass.MiscMenu(misc))
                 {
                     misc.AddItem(new MenuItem("Misc.SaveManaForUltimate", "Save Mana for Ultimate").SetValue(false));                    
                     Config.AddSubMenu(misc);
                 }
                 /*
                                 var extras = new Menu("Extras", "Extras");
-                                if (CClass.ExtrasMenu(extras))
+                                if (ChampionClass.ExtrasMenu(extras))
                                 {
                                     Config.AddSubMenu(extras);
                                 }
@@ -360,7 +367,7 @@ namespace Marksman
                 Config.AddSubMenu(marksmanDrawings);
 
                 var drawing = new Menu(CultureInfo.CurrentCulture.TextInfo.ToTitleCase(championName), "Drawings").SetFontStyle(FontStyle.Regular, SharpDX.Color.Aquamarine);
-                if (CClass.DrawingMenu(drawing))
+                if (ChampionClass.DrawingMenu(drawing))
                 {
                     marksmanDrawings.AddSubMenu(drawing);
                 }
@@ -396,7 +403,7 @@ namespace Marksman
                 }
             }
 
-            CClass.MainMenu(Config);
+            ChampionClass.MainMenu(Config);
 
             //Evade.Evade.Initiliaze();
             //Config.AddSubMenu(Evade.Config.Menu);
@@ -408,18 +415,18 @@ namespace Marksman
                 i.DisplayName = ":: " + i.DisplayName;
             }
 
-            CheckAutoWindUp();
+            //CheckAutoWindUp();
 
             Drawing.OnDraw += Drawing_OnDraw;
             Game.OnUpdate += Game_OnGameUpdate;
             Game.OnUpdate += eventArgs =>
             {
-                if (CClass.LaneClearActive)
+                if (ChampionClass.LaneClearActive)
                 {
                     ExecuteLaneClear();
                 }
 
-                if (CClass.JungleClearActive)
+                if (ChampionClass.JungleClearActive)
                 {
                     ExecuteJungleClear();
                 }
@@ -427,8 +434,8 @@ namespace Marksman
                 PermaActive();
             };
 
-            Orbwalking.AfterAttack += Orbwalking_AfterAttack;
-            Orbwalking.BeforeAttack += Orbwalking_BeforeAttack;
+            Orb.Orbwalking.AfterAttack += Orbwalking_AfterAttack;
+            Orb.Orbwalking.BeforeAttack += Orbwalking_BeforeAttack;
             GameObject.OnCreate += OnCreateObject;
             GameObject.OnDelete += OnDeleteObject;
 
@@ -437,6 +444,8 @@ namespace Marksman
 
             Spellbook.OnCastSpell += Spellbook_OnCastSpell;
             Obj_AI_Base.OnProcessSpellCast += Obj_AI_Base_OnProcessSpellCast;
+
+            Console.Clear();
         }
 
         private static IEnumerable<Menu> GetChildirens(Menu menu)
@@ -469,9 +478,7 @@ namespace Marksman
                 windUp = 40;
             }
 
-            OrbWalking.Item("ExtraWindup").SetValue(windUp < 200 ? new Slider(windUp, 200, 0) : new Slider(200, 200, 0));
-
-            int existsWind = OrbWalking.Item("ExtraWindup").GetValue<Slider>().Value;
+            
         }
 
         private static void Drawing_OnDraw(EventArgs args)
@@ -483,12 +490,12 @@ namespace Marksman
                 return;
             }
 
-            if ((turnOffDrawings == 2 || turnOffDrawings == 4) && CClass.Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
+            if ((turnOffDrawings == 2 || turnOffDrawings == 4) && ChampionClass.Orbwalker.ActiveMode == Orb.Orbwalking.OrbwalkingMode.Combo)
             {
                 return;
             }
 
-            if ((turnOffDrawings == 3 || turnOffDrawings == 4) && (CClass.Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.LastHit || CClass.Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.LaneClear))
+            if ((turnOffDrawings == 3 || turnOffDrawings == 4) && (ChampionClass.Orbwalker.ActiveMode == Orb.Orbwalking.OrbwalkingMode.LastHit || ChampionClass.Orbwalker.ActiveMode == Orb.Orbwalking.OrbwalkingMode.LaneClear))
             {
                 return;
             }
@@ -500,11 +507,11 @@ namespace Marksman
 
                 if (drawMinionLastHit == 1)
                 {
-                    mx = mx.Where(m => m.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + 65));
+                    mx = mx.Where(m => m.IsValidTarget(Orb.Orbwalking.GetRealAutoAttackRange(null) + 65));
                 }
                 else
                 {
-                    mx = mx.Where(m => m.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + 65 + 300) && m.Distance(ObjectManager.Player.Position) > Orbwalking.GetRealAutoAttackRange(null) + 65);
+                    mx = mx.Where(m => m.IsValidTarget(Orb.Orbwalking.GetRealAutoAttackRange(null) + 65 + 300) && m.Distance(ObjectManager.Player.Position) > Orb.Orbwalking.GetRealAutoAttackRange(null) + 65);
                 }
 
                 foreach (var minion in mx)
@@ -513,9 +520,9 @@ namespace Marksman
                 }
             }
 
-            if (CClass != null)
+            if (ChampionClass != null)
             {
-                CClass.Drawing_OnDraw(args);
+                ChampionClass.Drawing_OnDraw(args);
             }
         }
 
@@ -527,22 +534,22 @@ namespace Marksman
         private static void Game_OnGameUpdate(EventArgs args)
         {
             //Update the combo and harass values.
-            CClass.ComboActive = CClass.Config.Item("Orbwalk").GetValue<KeyBind>().Active;
+            ChampionClass.ComboActive = ChampionClass.Config.Item("Orbwalk").GetValue<KeyBind>().Active;
             
             var vHarassManaPer = Config.Item("HarassMana").GetValue<Slider>().Value;
-            CClass.HarassActive = CClass.Config.Item("Farm").GetValue<KeyBind>().Active &&
+            ChampionClass.HarassActive = ChampionClass.Config.Item("Farm").GetValue<KeyBind>().Active &&
                                   ObjectManager.Player.ManaPercent >= vHarassManaPer;
 
-            CClass.ToggleActive = ObjectManager.Player.ManaPercent >= vHarassManaPer && CClass.Orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.Combo;
+            ChampionClass.ToggleActive = ObjectManager.Player.ManaPercent >= vHarassManaPer && ChampionClass.Orbwalker.ActiveMode != Orb.Orbwalking.OrbwalkingMode.Combo && !ObjectManager.Player.IsRecalling();
 
             var vLaneClearManaPer = HeroManager.Enemies.Find(e => e.IsValidTarget(2000) && !e.IsZombie) == null
                 ? Config.Item("LaneMana.Alone").GetValue<Slider>().Value
                 : Config.Item("LaneMana.Enemy").GetValue<Slider>().Value;
 
-            CClass.LaneClearActive = CClass.Config.Item("LaneClear").GetValue<KeyBind>().Active && ObjectManager.Player.ManaPercent >= vLaneClearManaPer && Config.Item("Lane.Enabled").GetValue<KeyBind>().Active;
+            ChampionClass.LaneClearActive = ChampionClass.Config.Item("LaneClear").GetValue<KeyBind>().Active && ObjectManager.Player.ManaPercent >= vLaneClearManaPer && Config.Item("Lane.Enabled").GetValue<KeyBind>().Active;
 
-            CClass.JungleClearActive = false;
-            if (CClass.Config.Item("LaneClear").GetValue<KeyBind>().Active && Config.Item("Jungle.Enabled").GetValue<KeyBind>().Active)
+            ChampionClass.JungleClearActive = false;
+            if (ChampionClass.Config.Item("LaneClear").GetValue<KeyBind>().Active && Config.Item("Jungle.Enabled").GetValue<KeyBind>().Active)
             {
                 List<Obj_AI_Base> mobs = MinionManager.GetMinions(ObjectManager.Player.Position, 1000, MinionTypes.All, MinionTeam.Neutral);
 
@@ -567,23 +574,23 @@ namespace Marksman
 
                     if (ObjectManager.Player.ManaPercent >= minMana)
                     {
-                        CClass.JungleClearActive = true;
+                        ChampionClass.JungleClearActive = true;
                     }
                 }
             }
-            //CClass.JungleClearActive = CClass.Config.Item("LaneClear").GetValue<KeyBind>().Active && ObjectManager.Player.ManaPercent >= Config.Item("Jungle.Mana").GetValue<Slider>().Value;
+            //ChampionClass.JungleClearActive = ChampionClass.Config.Item("LaneClear").GetValue<KeyBind>().Active && ObjectManager.Player.ManaPercent >= Config.Item("Jungle.Mana").GetValue<Slider>().Value;
 
-            CClass.Game_OnGameUpdate(args);
+            ChampionClass.Game_OnGameUpdate(args);
 
             UseSummoners();
             var useItemModes = Config.Item("UseItemsMode").GetValue<StringList>().SelectedIndex;
 
             //Items
             if (
-                !((CClass.Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo &&
+                !((ChampionClass.Orbwalker.ActiveMode == Orb.Orbwalking.OrbwalkingMode.Combo &&
                    (useItemModes == 2 || useItemModes == 3))
                   ||
-                  (CClass.Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Mixed &&
+                  (ChampionClass.Orbwalker.ActiveMode == Orb.Orbwalking.OrbwalkingMode.Mixed &&
                    (useItemModes == 1 || useItemModes == 3))))
                 return;
 
@@ -591,12 +598,12 @@ namespace Marksman
             var ghostblade = Config.Item("GHOSTBLADE").GetValue<bool>();
             var sword = Config.Item("SWORD").GetValue<bool>();
             var muramana = Config.Item("MURAMANA").GetValue<bool>();
-            var target = CClass.Orbwalker.GetTarget() as Obj_AI_Base;
+            var target = ChampionClass.Orbwalker.GetTarget() as Obj_AI_Base;
 
             var smiteReady = (SmiteSlot != SpellSlot.Unknown &&
                               ObjectManager.Player.Spellbook.CanUseSpell(SmiteSlot) == SpellState.Ready);
 
-            if (smiteReady && CClass.Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
+            if (smiteReady && ChampionClass.Orbwalker.ActiveMode == Orb.Orbwalking.OrbwalkingMode.Combo)
                 Smiteontarget(target as Obj_AI_Hero);
 
             if (botrk)
@@ -618,28 +625,28 @@ namespace Marksman
             }
 
             if (ghostblade && target != null && target.Type == ObjectManager.Player.Type &&
-                !ObjectManager.Player.HasBuff("ItemSoTD", true) /*if Sword of the divine is not active */
-                && Orbwalking.InAutoAttackRange(target))
+                !ObjectManager.Player.HasBuff("ItemSoTD") /*if Sword of the divine is not active */
+                && Orb.Orbwalking.InAutoAttackRange(target))
                 Items.UseItem(3142);
 
             if (sword && target != null && target.Type == ObjectManager.Player.Type &&
-                !ObjectManager.Player.HasBuff("spectralfury", true) /*if ghostblade is not active*/
-                && Orbwalking.InAutoAttackRange(target))
+                !ObjectManager.Player.HasBuff("spectralfury") /*if ghostblade is not active*/
+                && Orb.Orbwalking.InAutoAttackRange(target))
                 Items.UseItem(3131);
 
             if (muramana && Items.HasItem(3042))
             {
-                if (target != null && CClass.ComboActive &&
+                if (target != null && ChampionClass.ComboActive &&
                     target.Position.Distance(ObjectManager.Player.Position) < 1200)
                 {
-                    if (!ObjectManager.Player.HasBuff("Muramana", true))
+                    if (!ObjectManager.Player.HasBuff("Muramana"))
                     {
                         Items.UseItem(3042);
                     }
                 }
                 else
                 {
-                    if (ObjectManager.Player.HasBuff("Muramana", true))
+                    if (ObjectManager.Player.HasBuff("Muramana"))
                     {
                         Items.UseItem(3042);
                     }
@@ -649,12 +656,12 @@ namespace Marksman
 
         public static void UseSummoners()
         {
-            if (CClass.Orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.Combo)
+            if (ChampionClass.Orbwalker.ActiveMode != Orb.Orbwalking.OrbwalkingMode.Combo)
             {
                 return;
             }
 
-            var t = CClass.Orbwalker.GetTarget() as Obj_AI_Hero;
+            var t = ChampionClass.Orbwalker.GetTarget() as Obj_AI_Hero;
 
             if (t != null && IgniteSlot != SpellSlot.Unknown &&
                 ObjectManager.Player.Spellbook.CanUseSpell(IgniteSlot) == SpellState.Ready)
@@ -670,29 +677,29 @@ namespace Marksman
 
         private static void Orbwalking_AfterAttack(AttackableUnit unit, AttackableUnit target)
         {
-            CClass.Orbwalking_AfterAttack(unit, target);
+            ChampionClass.Orbwalking_AfterAttack(unit, target);
         }
 
-        private static void Orbwalking_BeforeAttack(Orbwalking.BeforeAttackEventArgs args)
+        private static void Orbwalking_BeforeAttack(Orb.Orbwalking.BeforeAttackEventArgs args)
         {
-            CClass.Orbwalking_BeforeAttack(args);
+            ChampionClass.Orbwalking_BeforeAttack(args);
         }
 
         private static void ExecuteJungleClear()
         {
-            CClass.ExecuteJungleClear();
+            ChampionClass.ExecuteJungleClear();
         }
         private static void ExecuteLaneClear()
         {
-            CClass.ExecuteLaneClear();
+            ChampionClass.ExecuteLaneClear();
         }
         private static void PermaActive()
         {
-            CClass.PermaActive();
+            ChampionClass.PermaActive();
         }
         private static void Obj_AI_Base_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
         {
-            CClass.Obj_AI_Base_OnProcessSpellCast(sender, args);
+            ChampionClass.Obj_AI_Base_OnProcessSpellCast(sender, args);
         }
         private static void Spellbook_OnCastSpell(Spellbook sender, SpellbookCastSpellEventArgs args)
         {
@@ -708,27 +715,27 @@ namespace Marksman
                 }
             }
             
-            CClass.Spellbook_OnCastSpell(sender, args);
+            ChampionClass.Spellbook_OnCastSpell(sender, args);
         }
 
         private static void OnCreateObject(GameObject sender, EventArgs args)
         {
-            CClass.OnCreateObject(sender, args);
+            ChampionClass.OnCreateObject(sender, args);
         }
 
         private static void OnDeleteObject(GameObject sender, EventArgs args)
         {
-            CClass.OnDeleteObject(sender, args);
+            ChampionClass.OnDeleteObject(sender, args);
         }
 
         private static void Obj_AI_Base_OnBuffAdd(Obj_AI_Base sender, Obj_AI_BaseBuffAddEventArgs args)
         {
-            CClass.Obj_AI_Base_OnBuffAdd(sender, args);
+            ChampionClass.Obj_AI_Base_OnBuffAdd(sender, args);
         }
 
         private static void Obj_AI_Base_OnBuffRemove(Obj_AI_Base sender, Obj_AI_BaseBuffRemoveEventArgs args)
         {
-            CClass.Obj_AI_Base_OnBuffRemove(sender, args);
+            ChampionClass.Obj_AI_Base_OnBuffRemove(sender, args);
         }
 
         private static string Smitetype

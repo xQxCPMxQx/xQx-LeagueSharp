@@ -3,6 +3,8 @@
 using System;
 using LeagueSharp;
 using LeagueSharp.Common;
+using Marksman.Orb;
+using Orbwalking = Marksman.Orb.Orbwalking;
 
 #endregion
 
@@ -18,6 +20,7 @@ namespace Marksman.Champions
         
         public string Id = "";
         public Orbwalking.Orbwalker Orbwalker;
+        public Orbwalking.Orbwalker OrbwalkerM;
         public bool ToggleActive;
 
         public T GetValue<T>(string item)

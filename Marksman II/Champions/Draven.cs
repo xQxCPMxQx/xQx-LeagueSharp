@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
+using Marksman.Orb;
 using SharpDX;
 using Color = System.Drawing.Color;
+using Orbwalking = Marksman.Orb.Orbwalking;
 
 
 namespace Marksman.Champions
@@ -166,11 +168,11 @@ namespace Marksman.Champions
             if (orbwalkPos != cursor &&
                 (ComboActive || LaneClearActive || Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.LastHit))
             {
-                Orbwalker.SetOrbwalkingPoint(orbwalkPos);
+                Orbwalker.SetMarksmanOrbwalkingPoint(orbwalkPos);
             }
             else
             {
-                Orbwalker.SetOrbwalkingPoint(cursor);
+                Orbwalker.SetMarksmanOrbwalkingPoint(cursor);
             }
             Obj_AI_Hero t;
             //Combo
@@ -215,7 +217,7 @@ namespace Marksman.Champions
                                         enemy.IsValidTarget() &&
                                         enemy.Distance(ObjectManager.Player) <=
                                         enemy.BoundingRadius + enemy.AttackRange + ObjectManager.Player.BoundingRadius &&
-                                        enemy.IsMelee()
+                                        LeagueSharp.Common.Orbwalking.IsMelee(enemy)
                                     let direction =
                                         (enemy.ServerPosition.To2D() - ObjectManager.Player.ServerPosition.To2D()).Normalized()
                                     let pos = ObjectManager.Player.ServerPosition.To2D()

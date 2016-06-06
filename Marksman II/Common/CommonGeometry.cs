@@ -17,6 +17,7 @@
 #region
 
 using System.Linq;
+using SharpDX.Direct3D9;
 using Path = System.Collections.Generic.List<ClipperLib.IntPoint>;
 using Paths = System.Collections.Generic.List<System.Collections.Generic.List<ClipperLib.IntPoint>>;
 using GamePath = System.Collections.Generic.List<SharpDX.Vector2>;
@@ -47,6 +48,127 @@ namespace Marksman.Common
         private const int CircleLineSegmentN = 22;
 
         #endregion
+
+        public static Font Text;
+        public static Font TextPassive;
+
+        public static bool IsWallBetween(Vector3 start, Vector3 end, int step = 3)
+        {
+            if (start.IsValid() && end.IsValid() && step > 0)
+            {
+                var distance = start.Distance(end);
+                for (var i = 0; i < distance; i = i + step)
+                {
+                    if (NavMesh.GetCollisionFlags(start.Extend(end, i)) == CollisionFlags.Wall)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        private static void CurrentDomainOnDomainUnload(object sender, EventArgs eventArgs)
+        {
+            Text.Dispose();
+            TextPassive.Dispose();
+        }
+
+        private static void DrawingOnOnPostReset(EventArgs args)
+        {
+            Text.OnResetDevice();
+            TextPassive.OnResetDevice();
+        }
+
+        private static void DrawingOnOnPreReset(EventArgs args)
+        {
+            Text.OnLostDevice();
+            TextPassive.OnLostDevice();
+        }
+
+        public static void Init()
+        {
+
+
+            Text = new Font(
+                Drawing.Direct3DDevice,
+                new FontDescription
+                {
+                    FaceName = "Tahoma",
+                    Height = 13,
+                    OutputPrecision = FontPrecision.Default,
+                    Quality = FontQuality.Default
+                });
+            TextPassive = new Font(
+               Drawing.Direct3DDevice,
+               new FontDescription
+               {
+                   FaceName = "Calibri",
+                   Height = 11,
+                   OutputPrecision = FontPrecision.Default,
+                   Quality = FontQuality.Draft
+               });
+            Drawing.OnPreReset += DrawingOnOnPreReset;
+            Drawing.OnPostReset += DrawingOnOnPostReset;
+            AppDomain.CurrentDomain.DomainUnload += CurrentDomainOnDomainUnload;
+            AppDomain.CurrentDomain.ProcessExit += CurrentDomainOnDomainUnload;
+        }
+        public static void DrawBox(float positionX, float positionY, float width, int height, System.Drawing.Color color, int borderwidth, System.Drawing.Color borderColor, string text = "")
+        {
+            if (color != Color.Transparent)
+            {
+                Drawing.DrawLine(positionX, positionY, positionX + width, positionY, height, color);
+            }
+
+            if (borderwidth > 0)
+            {
+                Drawing.DrawLine(positionX, positionY, positionX + width - 1, positionY, borderwidth, borderColor);
+                Drawing.DrawLine(positionX, positionY + height, positionX + width - 1, positionY + height, borderwidth, borderColor);
+                Drawing.DrawLine(positionX, positionY + 1, positionX, positionY + height, borderwidth,
+                    borderColor);
+                Drawing.DrawLine(positionX + width, positionY + 1, positionX + width, positionY + height,
+                    borderwidth, borderColor);
+            }
+
+            if (text != "")
+            {
+
+            }
+        }
+
+        public static void DrawBox(Vector2 position, float width, int height, System.Drawing.Color color, int borderwidth, System.Drawing.Color borderColor, string text = "")
+        {
+            if (color != Color.Transparent)
+            {
+                Drawing.DrawLine(position.X, position.Y, position.X + width, position.Y, height, color);
+            }
+
+            if (borderwidth > 0)
+            {
+                Drawing.DrawLine(position.X, position.Y, position.X + width - 1, position.Y, borderwidth, borderColor);
+                Drawing.DrawLine(position.X, position.Y + height, position.X + width - 1, position.Y + height, borderwidth, borderColor);
+                Drawing.DrawLine(position.X, position.Y + 1, position.X, position.Y + height, borderwidth,
+                    borderColor);
+                Drawing.DrawLine(position.X + width, position.Y + 1, position.X + width, position.Y + height,
+                    borderwidth, borderColor);
+            }
+
+            if (text != "")
+            {
+
+            }
+        }
+
+        public static void DrawText(Font vFont, string vText, float vPosX, float vPosY, ColorBGRA vColor, bool shadow = false)
+        {
+            if (shadow)
+            {
+                vFont.DrawText(null, vText, (int)vPosX + 2, (int)vPosY + 2, SharpDX.Color.Black);
+            }
+
+            vFont.DrawText(null, vText, (int)vPosX, (int)vPosY, vColor);
+        }
+
 
         #region Public Methods and Operators
 

@@ -5,10 +5,13 @@ using System.Drawing;
 using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
+using Marksman.Champions;
+using Marksman.Common;
+using Marksman.Orb;
 using Marksman.Utils;
 using SharpDX;
 using Color = SharpDX.Color;
-
+using Orbwalking = Marksman.Orb.Orbwalking;
 
 #endregion
 
@@ -21,7 +24,7 @@ namespace Marksman.Champions
         public Jinx()
         {
             Q = new Spell(SpellSlot.Q);
-            W = new Spell(SpellSlot.W, 1500f);
+            W = new Spell(SpellSlot.W, 1450f);
             E = new Spell(SpellSlot.E, 900f);
             R = new Spell(SpellSlot.R, 25000f);
 
@@ -137,15 +140,27 @@ namespace Marksman.Champions
 
         public override void Game_OnGameUpdate(EventArgs args)
         {
+            //var t1 = TargetSelector.GetTarget(2000, TargetSelector.DamageType.Physical);
+            //if (t1.IsValidTarget())
+            //{
+            //    if (t1.IsFacing(ObjectManager.Player))
+            //    {
+            //        Console.WriteLine("--> Face " + t1.ChampionName);
+            //    }
+            //    else
+            //    {
+            //        Console.WriteLine(t1.ChampionName + " <-- Back");
+            //    }
+            //}
             /*
             var x = HeroManager.Enemies.Find(e => !e.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null)) && e.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + QAddRange));
             if (x != null && !FishBoneActive && Q.IsReady())
             {
                 Q.Cast();
-                Program.CClass.Orbwalker.ForceTarget(x);
+                Program.ChampionClass.Orbwalker.ForceTarget(x);
             }
             */
-            if (Q.IsReady() && GetValue<bool>("SwapDistance") && Program.CClass.Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
+            if (Q.IsReady() && GetValue<bool>("SwapDistance") && Program.ChampionClass.Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
             {
                 var activeQ = ObjectManager.Player.Spellbook.GetSpell(SpellSlot.Q).Level * 25 + 650;
                 var t = TargetSelector.GetTarget(activeQ, TargetSelector.DamageType.Physical);
@@ -219,12 +234,29 @@ namespace Marksman.Champions
                     }
 
                     if (E.IsReady()
-                        && (enemy.HasBuffOfType(BuffType.Stun) || enemy.HasBuffOfType(BuffType.Snare)
-                            || enemy.HasBuffOfType(BuffType.Charm) || enemy.HasBuffOfType(BuffType.Fear) || enemy.HasBuffOfType(BuffType.Slow)
-                            || enemy.HasBuffOfType(BuffType.Taunt) || enemy.HasBuff("zhonyasringshield")
+                            && (enemy.HasBuffOfType(BuffType.Stun) 
+                            || enemy.HasBuffOfType(BuffType.Snare)
+                            || enemy.HasBuffOfType(BuffType.Charm) 
+                            || enemy.HasBuffOfType(BuffType.Fear) 
+                            || enemy.HasBuffOfType(BuffType.Slow)
+                            || enemy.HasBuffOfType(BuffType.Taunt) 
+                            || enemy.HasBuff("zhonyasringshield")
                             || enemy.HasBuff("Recall")))
                     {
                         E.CastIfHitchanceEquals(enemy, HitChance.High);
+                    }
+                    else 
+                    if (W.IsReady()
+                            && (enemy.HasBuffOfType(BuffType.Stun)
+                            || enemy.HasBuffOfType(BuffType.Snare)
+                            || enemy.HasBuffOfType(BuffType.Charm)
+                            || enemy.HasBuffOfType(BuffType.Fear)
+                            || enemy.HasBuffOfType(BuffType.Slow)
+                            || enemy.HasBuffOfType(BuffType.Taunt)
+                            || enemy.HasBuff("zhonyasringshield")
+                            || enemy.HasBuff("Recall")))
+                    {
+                        W.CastIfHitchanceEquals(enemy, HitChance.High);
                     }
 
                     if (autoEd && E.IsReady() && enemy.IsDashing())
@@ -233,8 +265,7 @@ namespace Marksman.Champions
                     }
                 }
             }
-
-
+            
             if (GetValue<KeyBind>("CastR").Active && R.IsReady())
             {
                 var t = TargetSelector.GetTarget(1500, TargetSelector.DamageType.Physical);
@@ -242,8 +273,8 @@ namespace Marksman.Champions
                 {
                     if (ObjectManager.Player.GetSpellDamage(t, SpellSlot.R) > t.Health && !t.IsZombie)
                     {
-                        //R.Cast(target);
-                        R.CastIfHitchanceEquals(t, HitChance.High, false);
+                        R.CastIfHitchanceGreaterOrEqual(t);
+                        //R.CastIfHitchanceEquals(t, HitChance.High, false);
                     }
                 }
             }
@@ -287,10 +318,7 @@ namespace Marksman.Champions
 
                 if (t.IsValidTarget() && !t.HasKindredUltiBuff() && GetRealDistance(t) >= minW)
                 {
-                    if (W.Cast(t) == Spell.CastStates.SuccessfullyCasted)
-                    {
-                        return;
-                    }
+                    W.CastIfHitchanceGreaterOrEqual(t);
                 }
             }
             /*
@@ -352,7 +380,8 @@ namespace Marksman.Champions
                     {
                         if (ObjectManager.Player.GetSpellDamage(t, SpellSlot.R, 1) > t.Health && !t.IsZombie)
                         {
-                            R.CastIfHitchanceEquals(t, HitChance.High, false);
+                            R.CastIfHitchanceGreaterOrEqual(t);
+                            //R.CastIfHitchanceEquals(t, HitChance.High, false);
                             //if (R.Cast(t) == Spell.CastStates.SuccessfullyCasted) { }
                         }
                     }
@@ -372,7 +401,8 @@ namespace Marksman.Champions
                                     if (rDamage > t.Health && !t.IsZombie /*&& !ObjectManager.Player.IsAutoAttacking &&
                                         !ObjectManager.Player.IsChanneling*/)
                                     {
-                                        R.CastIfHitchanceEquals(t, HitChance.High, false);
+                                        R.CastIfHitchanceGreaterOrEqual(t);
+                                        //R.CastIfHitchanceEquals(t, HitChance.High, false);
                                         //if (R.Cast(t) == Spell.CastStates.SuccessfullyCasted) { }
                                     }
                                 }
@@ -388,7 +418,8 @@ namespace Marksman.Champions
                                     if (rDamage > t.Health && !t.IsZombie /*&& !ObjectManager.Player.IsAutoAttacking &&
                                         !ObjectManager.Player.IsChanneling*/)
                                     {
-                                        R.CastIfHitchanceEquals(t, HitChance.High, false);
+                                        R.CastIfHitchanceGreaterOrEqual(t);
+                                        //R.CastIfHitchanceEquals(t, HitChance.High, false);
                                         //if (R.Cast(t) == Spell.CastStates.SuccessfullyCasted) { }
                                     }
                                 }
@@ -413,10 +444,7 @@ namespace Marksman.Champions
 
                     if (t.IsValidTarget() && !t.HasKindredUltiBuff() && GetRealDistance(t) >= minW)
                     {
-                        if (W.Cast(t) == Spell.CastStates.SuccessfullyCasted)
-                        {
-                            return;
-                        }
+                        W.CastIfHitchanceGreaterOrEqual(t);
                     }
                 }
 

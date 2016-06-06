@@ -11,6 +11,7 @@ using SharpDX.Direct3D9;
 using Collision = LeagueSharp.Common.Collision;
 using Color = System.Drawing.Color;
 using Font = SharpDX.Direct3D9.Font;
+using Marksman.Common;
 
 #endregion
 
@@ -27,6 +28,8 @@ namespace Marksman.Champions
         public static Spell W;
 
         public static Spell R;
+
+        private static bool haveIceBorn = false;
 
         public Ezreal()
         {
@@ -50,7 +53,7 @@ namespace Marksman.Champions
                 //Game.PrintChat(args.Buff.Name);
             };
 
-            Utils.PrintMessage("Ezreal loaded. Added Charge R Option. Please check the misc menu");
+            Utils.PrintMessage("Ezreal loaded");
         }
       
         public override void Orbwalking_AfterAttack(AttackableUnit unit, AttackableUnit target)
@@ -63,34 +66,23 @@ namespace Marksman.Champions
 
                 if (Q.IsReady() && useQ)
                 {
-                    CastQ();
+                    Q.CastIfHitchanceGreaterOrEqual(t);
                 }
                 else if (W.IsReady() && useW)
                 {
-                    W.Cast(t);
-                }
-            }
-        }
-
-        private static void CastQ()
-        {
-            var t = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical);
-
-            if (t.IsValidTarget() && Q.IsReady() && ObjectManager.Player.Distance(t.ServerPosition) <= Q.Range)
-            {
-                var Qpredict = Q.GetPrediction(t);
-                var hithere = Qpredict.CastPosition.Extend(ObjectManager.Player.Position, -140);
-                if (Qpredict.Hitchance >= HitChance.High)
-                {
-                    Q.Cast(hithere);
+                    W.CastIfHitchanceGreaterOrEqual(t);
                 }
             }
         }
 
         public override void Drawing_OnDraw(EventArgs args)
         {
-            return;
-            
+            foreach (var enemy in HeroManager.Enemies.Where(enemy => R.IsReady() && enemy.IsValidTarget() && R.GetDamage(enemy) > enemy.Health))
+            {
+                Marksman.Common.CommonGeometry.DrawBox(new Vector2(Drawing.Width*0.43f, Drawing.Height*0.80f), 185, 18, Color.FromArgb(242, 255, 236, 6), 1, System.Drawing.Color.Black);
+                Marksman.Common.CommonGeometry.DrawText(Marksman.Common.CommonGeometry.Text, "Killable enemy with ultimate: " + enemy.ChampionName, Drawing.Width*0.435f, Drawing.Height*0.803f, SharpDX.Color.Black);
+            }
+
             Spell[] spellList = {Q, W};
             foreach (var spell in spellList)
             {
@@ -116,7 +108,10 @@ namespace Marksman.Champions
 
         public override void Game_OnGameUpdate(EventArgs args)
         {
-            if (GetValue<bool>("ChargeR.Enable") && Orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.Combo)
+            Console.WriteLine(Q.GetHitchance().ToString());
+            haveIceBorn = ObjectManager.Player.InventoryItems.Any(i => i.Id == ItemId.Iceborn_Gauntlet);
+            
+            if (GetValue<bool>("ChargeR.Enable") && Orbwalker.ActiveMode != Orb.Orbwalking.OrbwalkingMode.Combo)
             {
                 var rCooldown = GetValue<Slider>("ChargeR.Cooldown").Value;
                 var rMinMana = GetValue<Slider>("ChargeR.MinMana").Value;
@@ -169,7 +164,7 @@ namespace Marksman.Champions
                                  && Program.Config.Item("DontQToggleHarass" + t.ChampionName).GetValue<bool>() == false);
                     if (useQt)
                     {
-                        CastQ();
+                        Q.CastIfHitchanceGreaterOrEqual(t);
                     }
                 }
 
@@ -193,11 +188,11 @@ namespace Marksman.Champions
                 var useW = GetValue<bool>("UseW" + (ComboActive ? "C" : "H"));
                 var useR = Program.Config.SubMenu("Combo").Item("UseRC").GetValue<bool>();
 
-                if (Orbwalking.CanMove(100) && !t.HasKindredUltiBuff())
+                if (Orb.Orbwalking.CanMove(100) && !t.HasKindredUltiBuff())
                 {
                     if (useQ && Q.IsReady() && t.IsValidTarget(Q.Range))
                     {
-                        CastQ();
+                        Q.CastIfHitchanceGreaterOrEqual(t);
                     }
 
                     if (useW && W.IsReady() && t.IsValidTarget(W.Range))
@@ -230,12 +225,34 @@ namespace Marksman.Champions
             }
         }
 
+        public override bool LaneClearMenu(Menu config)
+        {
+            var qSubMenu = new Menu("Q Farm", "Lane.QFarm");
+            {
+                qSubMenu.AddItem(new MenuItem("Lane.UseQ" + Id, "Q: Everytime").SetValue(true)).SetFontStyle(FontStyle.Regular, Q.MenuColor());
+                qSubMenu.AddItem(new MenuItem("Lane.UseQ.AARange" + Id, "Q: Auto of AA Range").SetValue(true)).SetFontStyle(FontStyle.Regular, Q.MenuColor());
+                qSubMenu.AddItem(new MenuItem("Lane.Q.HeatlhPrediction" + Id, "Q: Health Prediciton").SetValue(true)).SetFontStyle(FontStyle.Regular, Q.MenuColor());
+            }
+            config.AddSubMenu(qSubMenu);
+            return true;
+        }
+
         public override void ExecuteLaneClear()
         {
-            var useQ = GetValue<bool>("Lane.UseQ");
-            if (Q.IsReady() && useQ)
+            if (!Q.IsReady())
             {
-                var vMinions = MinionManager.GetMinions(ObjectManager.Player.Position, Q.Range);
+                return;
+            }
+
+            if (!GetValue<bool>("Lane.UseQ") && !GetValue<bool>("Lane.UseQ.AARange") && !GetValue<bool>("Lane.UseQ.HeatlhPrediction"))
+            {
+                return;
+            }
+
+            var vMinions = MinionManager.GetMinions(ObjectManager.Player.Position, Q.Range);
+
+            if (GetValue<bool>("Lane.UseQ"))
+            {
                 foreach (var minions in
                     vMinions.Where(
                         minions => minions.Health < ObjectManager.Player.GetSpellDamage(minions, SpellSlot.Q)))
@@ -245,29 +262,72 @@ namespace Marksman.Champions
                     if (qP.Hitchance >= HitChance.High) Q.Cast(hit);
                 }
             }
+
+            if (GetValue<bool>("Lane.UseQ.AARange"))
+            {
+                foreach (var minions in
+                    vMinions.Where(
+                        minions =>
+                            minions.Health < ObjectManager.Player.GetSpellDamage(minions, SpellSlot.Q) &&
+                            !minions.IsValidTarget(Orb.Orbwalking.GetRealAutoAttackRange(null) + 65)))
+                {
+                    var qP = Q.GetPrediction(minions);
+                    var hit = qP.CastPosition.Extend(ObjectManager.Player.Position, -140);
+                    if (qP.Hitchance >= HitChance.High) Q.Cast(hit);
+                }
+            }
+
+            if (GetValue<bool>("Lane.Q.HeatlhPrediction"))
+            {
+                foreach (var n in vMinions)
+                {
+                    var xH = HealthPrediction.GetHealthPrediction(n, (int)(ObjectManager.Player.AttackCastDelay * 1000), Game.Ping + (int)Q.Delay);
+                    if (xH < 0)
+                    {
+                        if (n.Health < Q.GetDamage(n) && Q.CanCast(n))
+                        {
+                            Q.Cast(n);
+                        }
+                    }
+                }
+            }
         }
 
         public override void ExecuteJungleClear()
         {
+            if (!Q.IsReady() || GetValue<StringList>("Jungle.Q").SelectedIndex == 0)
+            {
+                return;
+            }
+
+
+
             var jungleMobs = Utils.GetMobs(Q.Range, Utils.MobTypes.All);
 
             if (jungleMobs != null)
             {
-                switch (GetValue<StringList>("UseQJ").SelectedIndex)
+                if (haveIceBorn)
                 {
-                    case 1:
+                    Q.Cast(jungleMobs);
+                }
+                else
+                {
+                    switch (GetValue<StringList>("Jungle.Q").SelectedIndex)
                     {
-                        Q.Cast(jungleMobs);
-                        break;
-                    }
-                    case 2:
-                    {
-                        jungleMobs = Utils.GetMobs(Q.Range, Utils.MobTypes.BigBoys);
-                        if (jungleMobs != null)
+                        case 1:
                         {
                             Q.Cast(jungleMobs);
+                            break;
                         }
-                        break;
+                        case 2:
+                        {
+                            jungleMobs = Utils.GetMobs(Q.Range, Utils.MobTypes.BigBoys);
+                            if (jungleMobs != null)
+                            {
+                                Q.Cast(jungleMobs);
+                            }
+                            break;
+                        }
                     }
                 }
             }
@@ -320,32 +380,31 @@ namespace Marksman.Champions
 
         public override bool HarassMenu(Menu config)
         {
-            config.AddItem(new MenuItem("UseQH" + Id, "Q").SetValue(true));
-            config.AddItem(new MenuItem("UseWH" + Id, "W").SetValue(true));
-
-            config.AddSubMenu(new Menu("Don't Q Toggle to", "DontQToggleHarass"));
-            config.AddSubMenu(new Menu("Don't W Toggle to", "DontWToggleHarass"));
+            var qSubMenu = new Menu("Q:", "Harass.Q");
             {
-                foreach (var enemy in
-                    ObjectManager.Get<Obj_AI_Hero>().Where(enemy => enemy.Team != ObjectManager.Player.Team))
+                qSubMenu.AddItem(new MenuItem("UseQH" + Id, "Use:").SetValue(true));
+                qSubMenu.AddItem(new MenuItem("UseQTH", "Toggle:").SetValue(new KeyBind("T".ToCharArray()[0], KeyBindType.Toggle))).Permashow(true, "Marksman | Toggle Q");
+                qSubMenu.AddSubMenu(new Menu("Don't Toggle:", "DontQToggleHarass"));
+                foreach (var enemy in ObjectManager.Get<Obj_AI_Hero>().Where(enemy => enemy.Team != ObjectManager.Player.Team))
                 {
-                    config.SubMenu("DontQToggleHarass")
-                        .AddItem(
-                            new MenuItem("DontQToggleHarass" + enemy.ChampionName, enemy.ChampionName).SetValue(false));
-
-                    config.SubMenu("DontWToggleHarass")
-                        .AddItem(
-                            new MenuItem("DontWToggleHarass" + enemy.ChampionName, enemy.ChampionName).SetValue(false));
+                    qSubMenu.SubMenu("DontQToggleHarass").AddItem(new MenuItem("DontQToggleHarass" + enemy.ChampionName, enemy.ChampionName).SetValue(false));
                 }
+                config.AddSubMenu(qSubMenu);
             }
 
-            config.AddItem(
-                new MenuItem("UseQTH", "Q (Toggle)").SetValue(new KeyBind("H".ToCharArray()[0], KeyBindType.Toggle)))
-                .Permashow(true, "Marksman | Toggle Q");
-            config.AddItem(
-                new MenuItem("UseWTH", "W (Toggle)").SetValue(new KeyBind("J".ToCharArray()[0], KeyBindType.Toggle)))
-                .Permashow(true, "Marksman | Toggle W");
-            //config.AddItem(new MenuItem("DrawHarassToggleStatus", "Draw Toggle Status").SetValue(true));
+            var wSubMenu = new Menu("W:", "Harass.W");
+            {
+                wSubMenu.AddItem(new MenuItem("UseWH" + Id, "Use:").SetValue(true));
+                wSubMenu.AddItem(new MenuItem("UseWTH", "Toggle:").SetValue(new KeyBind("H".ToCharArray()[0], KeyBindType.Toggle))).Permashow(true, "Marksman | Toggle W");
+                wSubMenu.AddSubMenu(new Menu("Don't Toggle:", "DontWToggleHarass"));
+                foreach (var enemy in ObjectManager.Get<Obj_AI_Hero>().Where(enemy => enemy.Team != ObjectManager.Player.Team))
+                {
+                    wSubMenu.SubMenu("DontWToggleHarass").AddItem(new MenuItem("DontWToggleHarass" + enemy.ChampionName, enemy.ChampionName).SetValue(false));
+                }
+                config.AddSubMenu(wSubMenu);
+            }
+
+            
             return true;
         }
 
@@ -374,42 +433,17 @@ namespace Marksman.Champions
             return true;
         }
 
-        public override bool LaneClearMenu(Menu config)
-        {
-            config.AddItem(new MenuItem("Lane.UseQ" + Id, "Q:").SetValue(true))
-                .SetFontStyle(FontStyle.Regular, Q.MenuColor());
-            config.AddItem(new MenuItem("Lane.UseQ.DontMissFarm" + Id, "Q Don't Miss Farm:").SetValue(true))
-                .SetFontStyle(FontStyle.Regular, Q.MenuColor());
-            return true;
-        }
-
+   
         public override bool JungleClearMenu(Menu config)
         {
-            config.AddItem(
-                new MenuItem("UseQJ" + Id, "Use Q").SetValue(new StringList(new[] {"Off", "On", "Just big Monsters"}, 1)))
+            config.AddItem(new MenuItem("Jungle.Q" + Id, "Use Q").SetValue(new StringList(new[] {"Off", "On", "Just big Monsters"}, 1)))
                 .SetFontStyle(FontStyle.Regular, Q.MenuColor());
             return true;
         }
 
         public override void PermaActive()
         {
-            if (GetValue<bool>("Lane.UseQ.DontMissFarm"))
-            {
-                var minions = MinionManager.GetMinions(ObjectManager.Player.ServerPosition, Q.Range);
-
-                foreach (var n in minions)
-                {
-                    var xH = HealthPrediction.GetHealthPrediction(n, (int) (ObjectManager.Player.AttackCastDelay*1000),
-                        Game.Ping*2);
-                    if (xH < 0)
-                    {
-                        if (n.Health < Q.GetDamage(n) && Q.CanCast(n))
-                        {
-                            Q.Cast(n);
-                        }
-                    }
-                }
-            }
+          
         }
     }
 }

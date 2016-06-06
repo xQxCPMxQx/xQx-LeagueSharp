@@ -4,8 +4,10 @@ using System;
 using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
+using Marksman.Orb;
 using SharpDX;
 using Color = System.Drawing.Color;
+using Orbwalking = Marksman.Orb.Orbwalking;
 
 #endregion
 
@@ -47,7 +49,7 @@ namespace Marksman.Champions
             if (Q.IsReady())
             {
 
-                var toPolygon = new Common.CommonGeometry.Rectangle(ObjectManager.Player.Position.To2D(), ObjectManager.Player.Position.To2D().Extend(t.Position.To2D(), Q.Range - 200), 50).ToPolygon();
+                var toPolygon = new Marksman.Common.CommonGeometry.Rectangle(ObjectManager.Player.Position.To2D(), ObjectManager.Player.Position.To2D().Extend(t.Position.To2D(), Q.Range - 200), 50).ToPolygon();
                 toPolygon.Draw(System.Drawing.Color.Red, 2);
                 
                 if (toPolygon.IsInside(t))
@@ -58,7 +60,7 @@ namespace Marksman.Champions
 
                 var xPos = ObjectManager.Player.Position.To2D().Extend(t.Position.To2D(), Q.Range);
 
-                var toPolygon2 = new Common.CommonGeometry.Rectangle(xPos, ObjectManager.Player.Position.To2D().Extend(t.Position.To2D(), Q.Range - 195), 260).ToPolygon();
+                var toPolygon2 = new Marksman.Common.CommonGeometry.Rectangle(xPos, ObjectManager.Player.Position.To2D().Extend(t.Position.To2D(), Q.Range - 195), 260).ToPolygon();
                 toPolygon2.Draw(System.Drawing.Color.Red, 2);
 
                 if (toPolygon2.IsInside(t))

@@ -6,6 +6,9 @@ using System.Drawing;
 using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
+using Marksman.Common;
+using Marksman.Orb;
+using Orbwalking = Marksman.Orb.Orbwalking;
 
 #endregion
 
@@ -98,18 +101,28 @@ namespace Marksman.Champions
         }
 
 
-        private static void CastQ()
+        private static void CastQ(Obj_AI_Hero t)
         {
-            var t = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical);
+            var nPrediction = Q.GetPrediction(t);
+            var nHitPosition = nPrediction.CastPosition.Extend(ObjectManager.Player.Position, -140);
+            if (nPrediction.Hitchance >= Q.GetHitchance())
+                Q.Cast(nHitPosition);
+        }
 
-            if (t.IsValidTarget() && Q.IsReady() &&
-                ObjectManager.Player.Distance(t.ServerPosition) <= Q.Range)
-            {
-                var qPredict = Q.GetPrediction(t);
-                var hithere = qPredict.CastPosition.Extend(ObjectManager.Player.Position, -140);
-                if (qPredict.Hitchance >= HitChance.High)
-                    Q.Cast(hithere);
-            }
+        private static void CastE(Obj_AI_Base t)
+        {
+            var nPrediction = E.GetPrediction(t);
+            var nHitPosition = nPrediction.CastPosition.Extend(ObjectManager.Player.Position, -140);
+            if (nPrediction.Hitchance >= E.GetHitchance())
+                E.Cast(nHitPosition);
+        }
+
+        private static void CastR(Obj_AI_Base t)
+        {
+            var nPrediction = E.GetPrediction(t);
+            var nHitPosition = nPrediction.CastPosition.Extend(ObjectManager.Player.Position, -140);
+            if (nPrediction.Hitchance >= R.GetHitchance())
+                R.Cast(nHitPosition);
         }
 
         public override void Game_OnGameUpdate(EventArgs args)
@@ -125,42 +138,51 @@ namespace Marksman.Champions
                         ObjectManager.Get<Obj_AI_Hero>()
                             .Where(
                                 hero => hero.IsValidTarget(R.Range) && R.GetDamage(hero) > hero.Health))
-                    R.Cast(hero, false, true);
+                    CastR(hero);
+                    //R.Cast(hero, false, true);
 
-            if ((!ComboActive && !HarassActive) ||
-                (!Orbwalking.CanMove(100) &&
-                 !(ObjectManager.Player.BaseAbilityDamage + ObjectManager.Player.FlatMagicDamageMod > 100))) return;
+            if ((!ComboActive && !HarassActive) || (!Orbwalking.CanMove(100) &&
+                 !(ObjectManager.Player.BaseAbilityDamage + ObjectManager.Player.FlatMagicDamageMod > 100)))
+            {
+                return;
+            }
 
             var useQ = GetValue<bool>("UseQ" + (ComboActive ? "C" : "H"));
+            var useE = GetValue<bool>("UseE" + (ComboActive ? "C" : "H"));
             var useR = GetValue<bool>("UseR" + (ComboActive ? "C" : "H"));
             var rLim = GetValue<Slider>("Rlim" + (ComboActive ? "C" : "H")).Value;
 
-            if (useQ && Q.IsReady())
+            var t = TargetSelector.GetTarget(R.Range, TargetSelector.DamageType.Magical);
+            if (useQ && Q.IsReady() && t.IsValidTarget(Q.Range))
             {
-                var t = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Magical);
-                if (t != null)
-                    CastQ();
+                    CastQ(t);
                 //if (Q.Cast(t) == Spell.CastStates.SuccessfullyCasted)
                 //    return;
             }
 
-            if (GetValue<bool>("UseRSC") && R.IsReady())
+            if (useE && E.IsReady() && t.IsValidTarget(E.Range))
             {
-                var t = TargetSelector.GetTarget(R.Range, TargetSelector.DamageType.Magical);
+                CastE(t);
+                //if (Q.Cast(t) == Spell.CastStates.SuccessfullyCasted)
+                //    return;
+            }
+            if (R.IsReady() && t.IsValidTarget(R.Range))
+                //if (GetValue<bool>("UseRSC") && R.IsReady() && t.IsValidTarget(R.Range))
+                {
                 if (t.IsValidTarget() &&
                     (t.HasBuffOfType(BuffType.Stun) || t.HasBuffOfType(BuffType.Snare) || t.HasBuffOfType(BuffType.Slow) ||
                      t.HasBuffOfType(BuffType.Fear) ||
                      t.HasBuffOfType(BuffType.Taunt)))
                 {
-                    R.Cast(t, false, true);
+                    CastR(t);
+                    //R.Cast(t, false, true);
                 }
             }
 
-            if (useR && R.IsReady() && UltiBuffStacks < rLim)
+            if (useR && R.IsReady() && UltiBuffStacks < rLim && t.IsValidTarget(R.Range))
             {
-                var t = TargetSelector.GetTarget(R.Range, TargetSelector.DamageType.Magical);
-                if (t != null)
-                    R.Cast(t, false, true);
+                CastR(t);
+                //R.Cast(t, false, true);
             }
         }
 
@@ -171,7 +193,7 @@ namespace Marksman.Champions
                 return;
             }
 
-            var t = target as Obj_AI_Hero;
+            var t = (Obj_AI_Hero) target;
             var useW = GetValue<bool>("UseW" + (ComboActive ? "C" : "H"));
             var useE = GetValue<bool>("UseE" + (ComboActive ? "C" : "H"));
 
@@ -180,9 +202,35 @@ namespace Marksman.Champions
 
 
             if (useE && E.IsReady())
-                if (E.Cast(t, false, true) == Spell.CastStates.SuccessfullyCasted)
-                    return;
+            {
+                CastE(t);
+            }
+                //if (E.Cast(t, false, true) == Spell.CastStates.SuccessfullyCasted)
+                  //  return;
 
+        }
+
+        public override void Spellbook_OnCastSpell(Spellbook sender, SpellbookCastSpellEventArgs args)
+        {
+            var nClosesTarget = HeroManager.Enemies.Find(e => e.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + 65));
+            {
+                if (nClosesTarget != null)
+                {
+                    if (GetValue<bool>("UseWMC") &&
+                        ObjectManager.Player.Spellbook.GetSpell(SpellSlot.W).Level > 0 &&
+                        Math.Abs(W.Cooldown) < 0.00001 &&
+                        args.Slot != SpellSlot.W)
+                    {
+                        var lastMana = ObjectManager.Player.Mana - ObjectManager.Player.Spellbook.GetSpell(args.Slot).ManaCost;
+                        if (lastMana < ObjectManager.Player.Spellbook.GetSpell(SpellSlot.W).ManaCost)
+                        {
+                    Game.PrintChat("Saved mana for W");
+                    args.Process = false;
+                            
+                        }
+                    }
+                }
+            }
         }
 
         private static int GetUltimateBuffStacks()
@@ -194,11 +242,12 @@ namespace Marksman.Champions
 
         public override bool ComboMenu(Menu config)
         {
-            config.AddItem(new MenuItem("UseQC" + Id, "Use Q").SetValue(true));
-            config.AddItem(new MenuItem("UseWC" + Id, "Use W").SetValue(true));
-            config.AddItem(new MenuItem("UseEC" + Id, "Use E").SetValue(true));
-            config.AddItem(new MenuItem("UseRC" + Id, "Use R").SetValue(true));
-            config.AddItem(new MenuItem("UseRSC" + Id, "Use R for Stunned Enemy").SetValue(true));
+            config.AddItem(new MenuItem("UseQC" + Id, "Q:").SetValue(true));
+            config.AddItem(new MenuItem("UseWC" + Id, "W:").SetValue(true));
+            config.AddItem(new MenuItem("UseWMC" + Id, "W: Protect mana for W").SetValue(true));
+            config.AddItem(new MenuItem("UseEC" + Id, "E:").SetValue(true));
+            config.AddItem(new MenuItem("UseRC" + Id, "R:").SetValue(true));
+//            config.AddItem(new MenuItem("UseRSC" + Id, "R for Stunned Enemy").SetValue(true));
             config.AddItem(new MenuItem("RlimC" + Id, "R Limiter").SetValue(new Slider(3, 5, 1)));
             return true;
         }

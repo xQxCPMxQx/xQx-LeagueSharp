@@ -4,8 +4,10 @@ using System;
 using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
+using Marksman.Orb;
 using SharpDX;
 using Color = System.Drawing.Color;
+using Orbwalking = Marksman.Orb.Orbwalking;
 
 #endregion
 
@@ -164,7 +166,7 @@ namespace Marksman.Champions
                     if (E.IsReady() && useE)
                     {
                         var t = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Physical);
-                        if (t.IsValidTarget() && !t.IsZombie && !isHePantheon(t) && !t.HasBuff("QuinnW_Cosmetic", true))
+                        if (t.IsValidTarget() && !t.IsZombie && !isHePantheon(t) && !t.HasBuff("QuinnW_Cosmetic"))
                         {
                             E.CastOnUnit(t);
                         }

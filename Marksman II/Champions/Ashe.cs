@@ -4,8 +4,10 @@ using System;
 using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
+using Marksman.Orb;
 using SharpDX;
 using SharpDX.Direct3D9;
+using Orbwalking = Marksman.Orb.Orbwalking;
 
 #endregion
 
@@ -67,7 +69,7 @@ namespace Marksman.Champions
         {
             get
             {
-                return ObjectManager.Player.HasBuff("AsheQCastReady", true);
+                return ObjectManager.Player.HasBuff("AsheQCastReady");
             }
         }
 

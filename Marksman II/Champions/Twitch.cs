@@ -6,10 +6,12 @@ using System.Linq;
 using System.Security.Cryptography;
 using LeagueSharp;
 using LeagueSharp.Common;
+using Marksman.Orb;
 using Marksman.Utils;
 using SharpDX;
 using Color = System.Drawing.Color;
 using SharpDX.Direct3D9;
+using Orbwalking = Marksman.Orb.Orbwalking;
 
 #endregion
 
@@ -67,9 +69,12 @@ namespace Marksman.Champions
             {
                 var useW = GetValue<bool>("UseW" + (ComboActive ? "C" : "H"));
                 var useE = GetValue<bool>("UseE" + (ComboActive ? "C" : "H"));
+
                 var t = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Physical);
-                if (t.HasKindredUltiBuff())
+                if (!t.IsValidTarget() || t.HasKindredUltiBuff())
+                {
                     return;
+                }
 
                 if (useW)
                 {
@@ -77,13 +82,14 @@ namespace Marksman.Champions
                         W.Cast(t, false, true);
                 }
 
-                if (useE && E.IsReady() && t.IsValidTarget())
+                if (useE && E.IsReady() && t.GetBuffCount("TwitchDeadlyVenom") == 6)
                 {
-                    var eTarget = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Physical);
-                    if (eTarget.IsValidTarget(E.Range) && eTarget.GetBuffCount("TwitchDeadlyVenom") == 6)
-                    {
-                        E.Cast();
-                    }
+                    E.Cast();
+                }
+
+                if (ObjectManager.Get<Obj_AI_Hero>().Find(e1 => e1.IsValidTarget(E.Range) && E.IsKillable(e1)) != null)
+                {
+                    E.Cast();
                 }
             }
 
@@ -104,39 +110,38 @@ namespace Marksman.Champions
 
         public override void ExecuteLaneClear()
         {
-            return;
-            var prepareMinions = Program.Config.Item("PrepareMinionsE.Lane").GetValue<StringList>().SelectedIndex;
-            if (prepareMinions != 0)
-            {
-                List<Obj_AI_Minion> list = new List<Obj_AI_Minion>();
+            //var prepareMinions = Program.Config.Item("PrepareMinionsE.Lane").GetValue<StringList>().SelectedIndex;
+            //if (prepareMinions != 0)
+            //{
+            //    List<Obj_AI_Minion> list = new List<Obj_AI_Minion>();
 
-                IEnumerable<Obj_AI_Minion> minions =
-                    from m in
-                        ObjectManager.Get<Obj_AI_Minion>()
-                            .Where(
-                                m =>
-                                    m.Health > ObjectManager.Player.TotalAttackDamage &&
-                                    m.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + 65))
-                    select m;
+            //    IEnumerable<Obj_AI_Minion> minions =
+            //        from m in
+            //            ObjectManager.Get<Obj_AI_Minion>()
+            //                .Where(
+            //                    m =>
+            //                        m.Health > ObjectManager.Player.TotalAttackDamage &&
+            //                        m.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + 65))
+            //        select m;
 
-                var objAiMinions = minions as Obj_AI_Minion[] ?? minions.ToArray();
-                foreach (var m in objAiMinions)
-                {
-                    if (m.GetBuffCount(twitchEBuffName) > 0)
-                    {
-                        list.Add(m);
-                    }
-                    else
-                    {
-                        list.Remove(m);
-                    }
-                }
+            //    var objAiMinions = minions as Obj_AI_Minion[] ?? minions.ToArray();
+            //    foreach (var m in objAiMinions)
+            //    {
+            //        if (m.GetBuffCount(twitchEBuffName) > 0)
+            //        {
+            //            list.Add(m);
+            //        }
+            //        else
+            //        {
+            //            list.Remove(m);
+            //        }
+            //    }
 
-                foreach (var l in objAiMinions.Except(list).ToList())
-                {
-                    Program.CClass.Orbwalker.ForceTarget(l);
-                }
-            }
+            //    foreach (var l in objAiMinions.Except(list).ToList())
+            //    {
+            //        Program.ChampionClass.Orbwalker.ForceTarget(l);
+            //    }
+            //}
         }
 
         public override void ExecuteJungleClear()

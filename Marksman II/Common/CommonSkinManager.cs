@@ -30,21 +30,62 @@ namespace Marksman.Common
 
                 switch (ObjectManager.Player.ChampionName.ToLower())
                 {
-                    case "ezreal":
+                    case "caitlyn":
+                    {
+                        strSkins = new[]
                         {
-                            strSkins = new[]
-                            {
+                            "Classic Caitlyn", "Resistance Caitlyn", "Sheriff Caitlyn", "Artic Warfare Caitlyn",
+                            "Office Caitlyn", "Headhunter Caitlyn", "Safari Caitlyn", "Lunar Wraith Caitlyn"
+                        };
+                        break;
+                    }
+
+                    case "ezreal":
+                    {
+                        strSkins = new[]
+                        {
                             "Classic Ezreal", "Nottingham Ezreal", "Striker Ezreal", "Frosted Ezreal", "Explorer Ezreal",
                             "Pulsefire Ezreal", "TPA Ezreal", "Deboniar Ezreal", "Ace of Spades Ezreal"
+                        };
+                        break;
+                    }
+
+                    case "kogmaw":
+                    {
+                        strSkins = new[]
+                        {
+                            "Classic Kog'Maw", "Caterpillar Kog'Maw", "Sonoran Kog'Maw", "Monarch Kog'Maw",
+                            "Reindeer Kog'Maw", "Lion Dance Kog'Maw", "Deep Sea Kog'Maw", "Jurassic Kog'Maw",
+                            "Battlecast Kog'Maw"
                         };
                             break;
                         }
 
+
+                    case "jinx":
+                        {
+                            strSkins = new[]
+                            {
+                            "Classic Jinx", "Mafia Jinx", "Firecracker Jinx", "Slayer Jinx"
+                        };
+                            break;
+                        }
                     case "lucian":
                     {
                         strSkins = new[]
                         {
-                            "Classic Lucian", "Hired Gun Lucian", "Striker Lucian", "Chrome Pack: Yellow Lucian", "Chrome Pack: Red Lucian", "Chrome Pack: Blue Lucian", "Project: Lucian"
+                            "Classic Lucian", "Hired Gun Lucian", "Striker Lucian", "Chrome Pack: Yellow Lucian",
+                            "Chrome Pack: Red Lucian", "Chrome Pack: Blue Lucian", "Project: Lucian"
+                        };
+                        break;
+                    }
+
+                    case "sivir":
+                    {
+                        strSkins = new[]
+                        {
+                            "Classic Sivir", "Warrior Princess Sivir", "Spectacutar Sivir", "Huntress Sivir",
+                            "Bandit Sivir", "PAX Sivir", "Showstorm Sivir", "Warden Sivir", "Victorious Sivir"
                         };
                             break;
                         }

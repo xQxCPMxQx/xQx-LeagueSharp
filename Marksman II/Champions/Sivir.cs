@@ -3,7 +3,10 @@ using System;
 using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
+using Marksman.Orb;
 using Marksman.Utils;
+using Orbwalking = Marksman.Orb.Orbwalking;
+
 #endregion
 
 namespace Marksman.Champions
@@ -82,17 +85,12 @@ namespace Marksman.Champions
 
         public void Obj_AI_Hero_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
         {
-            if (!E.IsReady())
+            if (!E.IsReady() || !(sender is Obj_AI_Hero))
             {
                 return;
             }
 
-            if (sender == null)
-            {
-                return;
-            }
-
-            if (sender.IsEnemy && sender is Obj_AI_Hero && args.Target.IsMe && E.IsReady())
+            if (sender.IsEnemy && args.Target.IsMe && E.IsReady())
             {
                 foreach (
                     var c in
@@ -103,17 +101,13 @@ namespace Marksman.Champions
                 }
             }
 
-            if (((Obj_AI_Hero) sender).ChampionName.ToLower() == "vayne" &&
-                args.SData.Name == ((Obj_AI_Hero) sender).GetSpell(SpellSlot.E).Name)
+            if (((Obj_AI_Hero) sender).ChampionName.ToLower() == "vayne" && args.SData.Name == ((Obj_AI_Hero) sender).GetSpell(SpellSlot.E).Name)
             {
                 for (var i = 1; i < 8; i++)
                 {
-                    var championBehind = ObjectManager.Player.Position +
-                                         Vector3.Normalize(((Obj_AI_Hero) sender).ServerPosition -
-                                                           ObjectManager.Player.Position)*(-i*50);
+                    var championBehind = ObjectManager.Player.Position + Vector3.Normalize(((Obj_AI_Hero) sender).ServerPosition - ObjectManager.Player.Position)*(-i*50);
                     if (championBehind.IsWall())
                     {
-
                         E.Cast();
                     }
                 }
@@ -122,7 +116,7 @@ namespace Marksman.Champions
 
         public override void Game_OnGameUpdate(EventArgs args)
         {
-            if (GetValue<bool>("AutoQ"))
+            if (GetValue<bool>("AutoQ") || GetValue<bool>("UseQ"))
             {
                 var t = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical);
                 if (Q.IsReady() && t.IsValidTarget())
@@ -131,7 +125,8 @@ namespace Marksman.Champions
                          t.HasBuffOfType(BuffType.Snare) || t.HasBuffOfType(BuffType.Fear) ||
                          t.HasBuffOfType(BuffType.Taunt)))
                     {
-                        CastQ();
+                        Q.CastIfHitchanceGreaterOrEqual(t);
+                        //CastQ();
                     }
                 }
             }
@@ -145,7 +140,8 @@ namespace Marksman.Champions
                     var t = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical);
                     if (t != null)
                     {
-                        CastQ();
+                        Q.CastIfHitchanceGreaterOrEqual(t);
+                        //CastQ();
                     }
                 }
             }
@@ -258,32 +254,6 @@ namespace Marksman.Champions
                 {
                     W.Cast();
                 }
-                else if (Q.IsReady() && useQ)
-                {
-                    CastQ();
-                }
-            }
-        }
-
-        private static void CastQ()
-        {
-            var t = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical);
-
-            if (t.IsValidTarget() && Q.IsReady() &&
-                ObjectManager.Player.Distance(t.ServerPosition) <= Q.Range)
-            {
-                var Qpredict = Q.GetPrediction(t);
-                var hithere = Qpredict.CastPosition.Extend(ObjectManager.Player.Position, -140);
-
-                var Hitchance = HitChance.High;
-                if (ObjectManager.Player.Distance(t) >= 850)
-                    Hitchance = HitChance.VeryHigh;
-                else if (ObjectManager.Player.Distance(t) < 850 && ObjectManager.Player.Distance(t) > 600)
-                    Hitchance = HitChance.High;
-                else
-                    Hitchance = HitChance.Medium;
-                if (Qpredict.Hitchance >= Hitchance)
-                    Q.Cast(hithere);
             }
         }
 

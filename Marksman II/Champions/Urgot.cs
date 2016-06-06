@@ -52,7 +52,7 @@ namespace Marksman.Champions
                             .Where(
                                 enemy =>
                                     enemy.IsEnemy && ObjectManager.Player.Distance(enemy) <= QEx.Range &&
-                                    enemy.HasBuff("urgotcorrosivedebuff", true))
+                                    enemy.HasBuff("urgotcorrosivedebuff"))
                         select enemy).FirstOrDefault();
             }
         }
@@ -129,7 +129,7 @@ namespace Marksman.Champions
             Drawing.DrawText(Drawing.Width*0.41f, Drawing.Height*0.80f, Color.GreenYellow,
                 "Teleport enemy to under ally turret active!");
 
-            if (R.IsReady() && Program.CClass.GetValue<bool>("UseRC"))
+            if (R.IsReady() && Program.ChampionClass.GetValue<bool>("UseRC"))
             {
                 var t = TargetSelector.GetTarget(R.Range, TargetSelector.DamageType.Physical);
                 if (t != null && UnderAllyTurret(ObjectManager.Player) && !UnderAllyTurret(t) &&
@@ -139,8 +139,8 @@ namespace Marksman.Champions
                 }
             }
 
-            UseSpells(Program.CClass.GetValue<bool>("UseQC"), Program.CClass.GetValue<bool>("UseWC"),
-                Program.CClass.GetValue<bool>("UseEC"));
+            UseSpells(Program.ChampionClass.GetValue<bool>("UseQC"), Program.ChampionClass.GetValue<bool>("UseWC"),
+                Program.ChampionClass.GetValue<bool>("UseEC"));
         }
 
         private static void UltInMyTeam()
@@ -160,16 +160,17 @@ namespace Marksman.Champions
                                 ally.IsAlly && !ally.IsDead && ObjectManager.Player.Distance(ally) <= R.Range &&
                                 t.Distance(ally) > t.Distance(ObjectManager.Player));
 
-                if (Ally.Count() >= Program.CClass.GetValue<Slider>("UltOp2Count").Value)
+                if (Ally.Count() >= Program.ChampionClass.GetValue<Slider>("UltOp2Count").Value)
                     R.CastOnUnit(t);
             }
 
-            UseSpells(Program.CClass.GetValue<bool>("UseQC"), Program.CClass.GetValue<bool>("UseWC"),
-                Program.CClass.GetValue<bool>("UseEC"));
+            UseSpells(Program.ChampionClass.GetValue<bool>("UseQC"), Program.ChampionClass.GetValue<bool>("UseWC"),
+                Program.ChampionClass.GetValue<bool>("UseEC"));
         }
 
         private static void CastQ(Obj_AI_Hero t)
         {
+            
             var Qpredict = Q.GetPrediction(t);
             var hithere = Qpredict.CastPosition.Extend(ObjectManager.Player.Position, -20);
 

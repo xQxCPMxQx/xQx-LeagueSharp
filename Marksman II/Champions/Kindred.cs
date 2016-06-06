@@ -6,9 +6,11 @@ using System.Drawing;
 using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
+using Marksman.Orb;
 using Marksman.Utils;
 using SharpDX.Direct3D9;
 using Font = SharpDX.Direct3D9.Font;
+using Orbwalking = Marksman.Orb.Orbwalking;
 
 #endregion
 
@@ -269,7 +271,7 @@ namespace Marksman.Champions
                 delegate (object sender, OnValueChangeEventArgs args)
                 {
                     config.Item("UseQLM").Show(args.GetNewValue<bool>());
-                    Program.CClass.Config.Item("LaneMinMana").Show(args.GetNewValue<bool>());
+                    Program.ChampionClass.Config.Item("LaneMinMana").Show(args.GetNewValue<bool>());
                 };
             config.AddItem(new MenuItem("UseQLM", "Min. Minion:").SetValue(new Slider(2, 1, 3)));
             config.AddItem(new MenuItem("UseWL", "Use W").SetValue(false));

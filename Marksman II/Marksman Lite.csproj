@@ -80,8 +80,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Champions\PlayerSpells.cs" />
     <Compile Include="Common\CommonEmote.cs" />
     <Compile Include="Common\CommonGeometry.cs" />
+    <Compile Include="Common\CommonSettings.cs" />
     <Compile Include="Common\CommonSkinManager.cs" />
     <Compile Include="Common\CommonAutoBush.cs" />
     <Compile Include="Common\CommonAutoPink.cs" />
@@ -97,6 +99,8 @@
     <Compile Include="Champions\Kalista.cs" />
     <Compile Include="Champions\Kindred.cs" />
     <Compile Include="Champions\Kogmaw.cs" />
+    <Compile Include="Common\SpellBlockManager.cs" />
+    <Compile Include="Orb\Orbwalking.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Champions\Lucian.cs" />

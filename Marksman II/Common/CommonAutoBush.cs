@@ -117,6 +117,11 @@ namespace Marksman.Common
                         menu.AddItem(new MenuItem(useMenuItemName, useMenuItemText + " E").SetValue(true));
                         break;
                     }
+                case "Caitlyn":
+                    {
+                        menu.AddItem(new MenuItem(useMenuItemName, useMenuItemText + " W").SetValue(true));
+                        break;
+                    }
                 case "Quinn":
                     {
                         menu.AddItem(new MenuItem(useMenuItemName, useMenuItemText + " W").SetValue(true));
@@ -153,6 +158,10 @@ namespace Marksman.Common
                 case "Ashe":
                     {
                         return new Spell(SpellSlot.E, 700);
+                    }
+                case "Caitlyn":
+                    {
+                        return new Spell(SpellSlot.W, 900);
                     }
                 case "Quinn":
                     {
@@ -228,6 +237,7 @@ namespace Marksman.Common
 
                             if ((ObjectManager.Player.ChampionName == "Corki"
                                  || ObjectManager.Player.ChampionName == "Ashe"
+                                 || ObjectManager.Player.ChampionName == "Caitlyn"
                                  || ObjectManager.Player.ChampionName == "Quinn"
                                  || ObjectManager.Player.ChampionName == "Kalista"
                                  || ObjectManager.Player.ChampionName == "Jinx") && ChampionSpell.IsReady())
