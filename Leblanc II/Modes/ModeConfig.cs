@@ -91,7 +91,7 @@ namespace Leblanc.Modes
             new ModeDraw().Init();
             Modes.ModePerma.Init();
             Champion.PlayerObjects.Init();
-            EvadeMain.Initialize();
+            //EvadeMain.Initialize();
             MenuConfig.AddToMainMenu();
             
             foreach (var i in MenuConfig.Children.Cast<Menu>().SelectMany(GetSubMenu))
