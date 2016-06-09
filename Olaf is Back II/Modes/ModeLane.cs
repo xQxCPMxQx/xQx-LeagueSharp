@@ -101,24 +101,24 @@ namespace Olaf.Modes
                 }
             }
 
-            //if (W.IsReady() && MenuLocal.Item("Lane.UseW").GetValue<StringList>().SelectedIndex != 0)
-            //{
-            //    var wCount = MenuLocal.Item("Lane.UseW").GetValue<StringList>().SelectedIndex;
+            if (MenuLocal.Item("Lane.UseW").GetValue<StringList>().SelectedIndex != 0 && W.IsReady())
+            {
+                var wCount = MenuLocal.Item("Lane.UseW").GetValue<StringList>().SelectedIndex;
 
-            //    var totalAa =
-            //        ObjectManager.Get<Obj_AI_Minion>()
-            //            .Where(
-            //                m =>
-            //                    m.IsEnemy && !m.IsDead &&
-            //                    m.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null)))
-            //            .Sum(mob => (int) mob.Health);
+                var totalAa =
+                    ObjectManager.Get<Obj_AI_Minion>()
+                        .Where(
+                            m =>
+                                m.IsEnemy && !m.IsDead &&
+                                m.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null)))
+                        .Sum(mob => (int)mob.Health);
 
-            //    totalAa = (int) (totalAa/ObjectManager.Player.TotalAttackDamage);
-            //    if (totalAa >= wCount + 3)
-            //    {
-            //        W.Cast();
-            //    }
-            //}
+                totalAa = (int)(totalAa / ObjectManager.Player.TotalAttackDamage);
+                if (totalAa >= wCount + 3)
+                {
+                    W.Cast();
+                }
+            }
 
             var useE = MenuLocal.Item("Lane.UseE").GetValue<StringList>().SelectedIndex;
             if (useE != 0 && E.IsReady())
