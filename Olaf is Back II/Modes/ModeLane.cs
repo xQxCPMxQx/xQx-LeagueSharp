@@ -121,7 +121,7 @@ namespace Olaf.Modes
             //}
 
             var useE = MenuLocal.Item("Lane.UseE").GetValue<StringList>().SelectedIndex;
-            if (E.IsReady())
+            if (useE != 0 && E.IsReady())
             {
                 var minions = MinionManager.GetMinions(ObjectManager.Player.ServerPosition, E.Range);
 
