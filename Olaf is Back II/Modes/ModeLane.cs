@@ -44,7 +44,7 @@ namespace Olaf.Modes
                     MenuLocal.AddItem(new MenuItem("Lane.UseW", "W:").SetValue(new StringList(strW, 1))).SetFontStyle(FontStyle.Regular, W.MenuColor());
                 }
 
-                MenuLocal.AddItem(new MenuItem("Lane.UseE", "E:").SetValue(new StringList(new[] { "Off", "On: Last hit" }, 1))).SetFontStyle(FontStyle.Regular, E.MenuColor());
+                MenuLocal.AddItem(new MenuItem("Lane.UseE", "E:").SetValue(new StringList(new[] { "Off", "On: Last hit", "On: Health Prediction", "Both" }, 3))).SetFontStyle(FontStyle.Regular, E.MenuColor());
 
                 MenuLocal.AddItem(new MenuItem("Lane.Item", "Items:").SetValue(new StringList(new[] { "Off", "On" }, 1))).SetFontStyle(FontStyle.Regular, Colors.ColorItems);
             }
@@ -120,21 +120,35 @@ namespace Olaf.Modes
             //    }
             //}
 
-            //if (E.IsReady() && MenuLocal.Item("Lane.UseE").GetValue<StringList>().SelectedIndex != 0)
-            //{
-            //    var minions = MinionManager.GetMinions(ObjectManager.Player.ServerPosition, E.Range * 1);
+            var useE = MenuLocal.Item("Lane.UseE").GetValue<StringList>().SelectedIndex;
+            if (E.IsReady())
+            {
+                var minions = MinionManager.GetMinions(ObjectManager.Player.ServerPosition, E.Range);
 
-            //    foreach (
-            //        var eMinion in
-            //            minions.Where(
-            //                m =>
-            //                    HealthPrediction.GetHealthPrediction(m,
-            //                        (int) (ObjectManager.Player.AttackCastDelay*1000), Game.Ping/2 + 100) < 0)
-            //                .Where(m => m.Health < E.GetDamage(m) && E.CanCast(m)))
-            //    {
-            //        E.CastOnUnit(eMinion);
-            //    }
-            //}
+                if (useE == 1 || useE == 3)
+                {
+                    foreach (
+                        var eMinion in
+                            minions.Where(m => m.Health < E.GetDamage(m) && E.CanCast(m)))
+                    {
+                        E.CastOnUnit(eMinion);
+                    }
+                }
+
+                if (useE == 2 || useE == 3)
+                {
+                    foreach (
+                        var eMinion in
+                            minions.Where(
+                                m =>
+                                    HealthPrediction.GetHealthPrediction(m,
+                                        (int) (ObjectManager.Player.AttackCastDelay*1000), Game.Ping/2) < 0)
+                                .Where(m => m.Health < E.GetDamage(m) && E.CanCast(m)))
+                    {
+                        E.CastOnUnit(eMinion);
+                    }
+                }
+            }
         }
     }
 }
