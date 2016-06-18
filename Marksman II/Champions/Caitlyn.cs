@@ -149,21 +149,21 @@ namespace Marksman.Champions
                 Render.Circle.DrawCircle(wcLeft.To3D(), 50f, Color.Green);
                 Render.Circle.DrawCircle(wcRight.To3D(), 50f, Color.Yellow);
             }
-            var bx = HeroManager.Enemies.Where(e => e.IsValidTarget(E.Range * 3));
-            foreach (var n in bx)
-            {
-                if (n.IsValidTarget(800) && ObjectManager.Player.Distance(n) < 450)
-                {
-                    Vector3[] x = new[] { ObjectManager.Player.Position, n.Position };
-                    Vector2 aX =
-                        Drawing.WorldToScreen(new Vector3(CommonGeometry.CenterOfVectors(x).X,
-                            CommonGeometry.CenterOfVectors(x).Y, CommonGeometry.CenterOfVectors(x).Z));
+            //var bx = HeroManager.Enemies.Where(e => e.IsValidTarget(E.Range * 3));
+            //foreach (var n in bx)
+            //{
+            //    if (n.IsValidTarget(800) && ObjectManager.Player.Distance(n) < 450)
+            //    {
+            //        Vector3[] x = new[] { ObjectManager.Player.Position, n.Position };
+            //        Vector2 aX =
+            //            Drawing.WorldToScreen(new Vector3(CommonGeometry.CenterOfVectors(x).X,
+            //                CommonGeometry.CenterOfVectors(x).Y, CommonGeometry.CenterOfVectors(x).Z));
 
-                    Render.Circle.DrawCircle(CommonGeometry.CenterOfVectors(x), 85f, Color.White );
-                    Drawing.DrawText(aX.X - 15, aX.Y - 15, Color.GreenYellow, n.ChampionName);
+            //        Render.Circle.DrawCircle(CommonGeometry.CenterOfVectors(x), 85f, Color.White );
+            //        Drawing.DrawText(aX.X - 15, aX.Y - 15, Color.GreenYellow, n.ChampionName);
                     
-                }
-            }
+            //    }
+            //}
 
             //var enemies = HeroManager.Enemies.Where(e => e.IsValidTarget(1500));
             //var objAiHeroes = enemies as Obj_AI_Hero[] ?? enemies.ToArray();
