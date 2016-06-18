@@ -62,7 +62,14 @@ namespace Marksman.Champions
         {
             return false;
         }
-        public virtual void Drawing_OnDraw(EventArgs args) { }
+
+        public virtual void Drawing_OnDraw(EventArgs args)
+        {
+            if (ObjectManager.Player.IsDead)
+            {
+                return;
+            }
+        }
 
         public virtual void Game_OnGameUpdate(EventArgs args)
         {

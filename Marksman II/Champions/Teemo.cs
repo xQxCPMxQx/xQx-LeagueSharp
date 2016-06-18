@@ -5,6 +5,7 @@ using System.Drawing;
 using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
+using Orbwalking = Marksman.Orb.Orbwalking;
 
 #endregion
 
@@ -14,7 +15,7 @@ namespace Marksman.Champions
     {
         public Spell Q;
         public Spell R;
-
+        private int LastRCast;
         public Teemo()
         {
             Q = new Spell(SpellSlot.Q, 680);
@@ -78,7 +79,18 @@ namespace Marksman.Champions
 
         public override void Game_OnGameUpdate(EventArgs args)
         {
-             R.Range = 150 + (R.Level*250);
+
+            //var lee = HeroManager.Allies.Find(l => l.ChampionName.ToLower() == "leesin");
+            //if (lee != null && !lee.IsDead)
+            //{
+            //    if (lee.Distance(ObjectManager.Player.Position) > 250 && !ObjectManager.Player.IsRecalling() &&
+            //        Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.None)
+            //    {
+            //        ObjectManager.Player.IssueOrder(GameObjectOrder.MoveTo, lee.Position);
+            //    }
+            //}
+
+            R.Range = 150 + (R.Level*250);
             
             if (Q.IsReady() && GetValue<KeyBind>("UseQTH").Active && ToggleActive)
             {
@@ -104,9 +116,18 @@ namespace Marksman.Champions
             {
                 foreach (var t in HeroManager.Enemies.Where(hero => hero.IsValidTarget(R.Range) && !hero.IsDead))
                 {
-                    if (GetValue<bool>("UseRC"))
+                    if (GetValue<bool>("UseRC") && LeagueSharp.Common.Utils.TickCount > LastRCast + 1200)
                     {
-                        R.Cast(t, false, true);
+                        if (t.HealthPercent > ObjectManager.Player.HealthPercent)
+                            //if (t.HealthPercent > ObjectManager.Player.HealthPercent && t.IsFacing(ObjectManager.Player))
+                            {
+                            R.Cast(ObjectManager.Player, false, true);
+                        }
+                        else
+                        {
+                            R.Cast(t, false, true);
+                        }
+                        LastRCast = LeagueSharp.Common.Utils.TickCount;
                     }
 
                     if (GetValue<bool>("AutoRI"))
@@ -158,7 +179,7 @@ namespace Marksman.Champions
         public override bool MiscMenu(Menu config)
         {
             config.AddItem(new MenuItem("UseQM" + Id, "Use Q KS").SetValue(true));
-            config.AddItem(new MenuItem("AutoRI" + Id, "Use R").SetValue(true));
+            config.AddItem(new MenuItem("AutoRI" + Id, "R: Stun/Snare/Taunt/Zhonya").SetValue(true));
             return true;
         }
 

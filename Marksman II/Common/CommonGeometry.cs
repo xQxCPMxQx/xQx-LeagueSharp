@@ -52,6 +52,17 @@ namespace Marksman.Common
         public static Font Text;
         public static Font TextPassive;
 
+        public static Vector3 CenterOfVectors(Vector3[] vectors)
+        {
+            var sum = Vector3.Zero;
+            if (vectors == null || vectors.Length == 0)
+                return sum;
+
+            sum = vectors.Aggregate(sum, (current, vec) => current + vec);
+
+            return sum / vectors.Length;
+        }
+
         public static bool IsWallBetween(Vector3 start, Vector3 end, int step = 3)
         {
             if (start.IsValid() && end.IsValid() && step > 0)

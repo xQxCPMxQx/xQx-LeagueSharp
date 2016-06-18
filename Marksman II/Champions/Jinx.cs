@@ -5,12 +5,8 @@ using System.Drawing;
 using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
-using Marksman.Champions;
-using Marksman.Common;
-using Marksman.Orb;
 using Marksman.Utils;
 using SharpDX;
-using Color = SharpDX.Color;
 using Orbwalking = Marksman.Orb.Orbwalking;
 
 #endregion
@@ -84,21 +80,9 @@ namespace Marksman.Champions
         }
 
 
-        public float QAddRange
-        {
-            get
-            {
-                return 50 + 25 * ObjectManager.Player.Spellbook.GetSpell(SpellSlot.Q).Level;
-            }
-        }
+        public float QAddRange => 50 + 25 * ObjectManager.Player.Spellbook.GetSpell(SpellSlot.Q).Level;
 
-        private static bool FishBoneActive
-        {
-            get
-            {
-                return ObjectManager.Player.AttackRange > 565f;
-            }
-        }
+        private static bool FishBoneActive => ObjectManager.Player.AttackRange > 565f;
 
         private static int PowPowStacks
         {
@@ -253,7 +237,6 @@ namespace Marksman.Champions
                             || enemy.HasBuffOfType(BuffType.Fear)
                             || enemy.HasBuffOfType(BuffType.Slow)
                             || enemy.HasBuffOfType(BuffType.Taunt)
-                            || enemy.HasBuff("zhonyasringshield")
                             || enemy.HasBuff("Recall")))
                     {
                         W.CastIfHitchanceEquals(enemy, HitChance.High);
@@ -283,25 +266,6 @@ namespace Marksman.Champions
             {
                 Q.Cast();
             }
-
-            if (HarassActive)
-            {
-                if (GetValue<bool>("UseQMH"))
-                {
-                    var t = TargetSelector.GetTarget(Q.Range*2, TargetSelector.DamageType.Magical);
-                    foreach (var m in ObjectManager.Get<Obj_AI_Minion>().Where(m => m.Distance(ObjectManager.Player.Position) < Orbwalking.GetRealAutoAttackRange(null) + QAddRange).OrderBy(m => m.Distance(t)))
-                    {
-                        
-                    }
-                }
-            }
-            /*
-            if (GetValue<bool>("SwapQ") && FishBoneActive && (LaneClearActive ||
-                 (HarassActive && TargetSelector.GetTarget(675f + QAddRange, TargetSelector.DamageType.Physical) == null)))
-            {
-                Q.Cast();
-            }
-            */
 
             if ((!ComboActive && !HarassActive) || !Orbwalking.CanMove(100))
             {
@@ -561,7 +525,7 @@ namespace Marksman.Champions
                 {
                     strQ[i] = "Minion Count >= " + i;
                 }
-                config.AddItem(new MenuItem("Lane.UseQ" + Id, "Q:").SetValue(new StringList(strQ, 0))).SetFontStyle(FontStyle.Regular, W.MenuColor());
+                config.AddItem(new MenuItem("Lane.UseQ" + Id, "Q:").SetValue(new StringList(strQ))).SetFontStyle(FontStyle.Regular, W.MenuColor());
             }
             config.AddItem(new MenuItem("Lane.UseQ.Mode" + Id, "Q Mode:").SetValue(new StringList(new[] { "Under Ally Turret", "Out of AA Range", "Botch" }, 2))).SetFontStyle(FontStyle.Regular, Q.MenuColor());
             
@@ -586,7 +550,7 @@ namespace Marksman.Champions
             }
             
             // W
-            config.AddItem(new MenuItem("Lane.UseW", "W [Just Big Mobs]:").SetValue(new StringList(new[] { "Off", "On", "Just Slows the Mob" }, 0))).SetFontStyle(FontStyle.Regular, W.MenuColor());
+            config.AddItem(new MenuItem("Lane.UseW", "W [Just Big Mobs]:").SetValue(new StringList(new[] { "Off", "On", "Just Slows the Mob" }))).SetFontStyle(FontStyle.Regular, W.MenuColor());
 
             // R
             config.AddItem(new MenuItem("Lane.UseR", "R:").SetValue(new StringList(new[] { "Off", "Baron/Dragon Steal"}, 1))).SetFontStyle(FontStyle.Regular, R.MenuColor());
@@ -594,26 +558,19 @@ namespace Marksman.Champions
             return true;
         }
 
-        public override bool MainMenu(Menu config)
-        {
-            return base.MainMenu(config);
-        }
-
         public override bool MiscMenu(Menu config)
         {
-            config.AddItem(new MenuItem("SwapQ" + Id, "Always swap to Minigun").SetValue(false));
-            config.AddItem(new MenuItem("SwapDistance" + Id, "Swap Q for distance").SetValue(true));
-            config.AddItem(new MenuItem("SwapAOE" + Id, "Swap Q for AOE").SetValue(false));
-            config.AddItem(new MenuItem("MinWRange" + Id, "Min W range").SetValue(new Slider(525 + 65 * 2, 0, 1200)));
-            config.AddItem(new MenuItem("AutoEI" + Id, "Auto-E on immobile").SetValue(true));
-            config.AddItem(new MenuItem("AutoES" + Id, "Auto-E on slowed").SetValue(true));
-            config.AddItem(new MenuItem("AutoED" + Id, "Auto-E on dashing").SetValue(false));
-            config.AddItem(
-                new MenuItem("CastR" + Id, "Cast R (2000 Range)").SetValue(
-                    new KeyBind("T".ToCharArray()[0], KeyBindType.Press)));
-            config.AddItem(new MenuItem("ROverKill" + Id, "Check R Overkill").SetValue(true));
-            config.AddItem(new MenuItem("MinRRange" + Id, "Min R range").SetValue(new Slider(300, 0, 1500)));
-            config.AddItem(new MenuItem("MaxRRange" + Id, "Max R range").SetValue(new Slider(1700, 0, 4000)));
+            config.AddItem(new MenuItem("SwapQ" + Id, "Q: Always swap to Minigun").SetValue(false)).SetFontStyle(FontStyle.Regular, Q.MenuColor());
+            config.AddItem(new MenuItem("SwapDistance" + Id, "Q: Swap for distance").SetValue(true)).SetFontStyle(FontStyle.Regular, Q.MenuColor());
+            config.AddItem(new MenuItem("SwapAOE" + Id, "Q: Swap for AOE").SetValue(false)).SetFontStyle(FontStyle.Regular, Q.MenuColor());
+            config.AddItem(new MenuItem("MinWRange" + Id, "W: Min. range").SetValue(new Slider(525 + 65 * 2, 0, 1200))).SetFontStyle(FontStyle.Regular, W.MenuColor());
+            config.AddItem(new MenuItem("AutoEI" + Id, "E: on immobile").SetValue(true)).SetFontStyle(FontStyle.Regular, E.MenuColor());
+            config.AddItem(new MenuItem("AutoES" + Id, "E: on slowed").SetValue(true)).SetFontStyle(FontStyle.Regular, E.MenuColor());
+            config.AddItem(new MenuItem("AutoED" + Id, "E: on dashing").SetValue(false)).SetFontStyle(FontStyle.Regular, E.MenuColor());
+            config.AddItem(new MenuItem("CastR" + Id, "R: (2000 Range)").SetValue(new KeyBind("T".ToCharArray()[0], KeyBindType.Press))).SetFontStyle(FontStyle.Regular, R.MenuColor());
+            config.AddItem(new MenuItem("ROverKill" + Id, "R: Kill Steal").SetValue(true)).SetFontStyle(FontStyle.Regular, R.MenuColor());
+            config.AddItem(new MenuItem("MinRRange" + Id, "R: Min. range").SetValue(new Slider(300, 0, 1500))).SetFontStyle(FontStyle.Regular, R.MenuColor());
+            config.AddItem(new MenuItem("MaxRRange" + Id, "R: Max. range").SetValue(new Slider(1700, 0, 4000))).SetFontStyle(FontStyle.Regular, R.MenuColor());
             return true;
         }
 
@@ -635,8 +592,7 @@ namespace Marksman.Champions
                         .OrderBy(e => ObjectManager.Player.Distance(e)))
             {
                 PredictionOutput ePred = E.GetPrediction(unit);
-                Vector3 eBehind = ePred.CastPosition -
-                                  Vector3.Normalize(unit.ServerPosition - ObjectManager.Player.ServerPosition)*150;
+                Vector3 eBehind = ePred.CastPosition - Vector3.Normalize(unit.ServerPosition - ObjectManager.Player.ServerPosition)*150;
 
                 if (E.IsReady())
                     E.Cast(eBehind);

@@ -35,7 +35,7 @@ namespace Marksman.Common
                         strSkins = new[]
                         {
                             "Classic Caitlyn", "Resistance Caitlyn", "Sheriff Caitlyn", "Artic Warfare Caitlyn",
-                            "Office Caitlyn", "Headhunter Caitlyn", "Safari Caitlyn", "Lunar Wraith Caitlyn"
+                            "Office Caitlyn", "Headhunter Caitlyn", "Safari Caitlyn", "Lunar Wraith Caitlyn", "sss", "aaa", "bbb", "ccc"
                         };
                         break;
                     }
