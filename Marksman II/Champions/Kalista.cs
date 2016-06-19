@@ -286,13 +286,29 @@ namespace Marksman.Champions
         {
             SoulBoundSaver();
 
-            foreach (
-                var e in
-                    HeroManager.Enemies.Where(e => e.IsRendKillable())
-                        .Where(e => E.CanCast(e) && e.IsKillableTarget(SpellSlot.E)))
+  foreach (var e in HeroManager.Enemies.Where(e => e.IsValidTarget(E.Range)))
             {
-                E.Cast();
+                foreach (var b in e.Buffs.Where(buff => buff.Name.Contains("kalistaexpungemarker")))
+                {
+                    if (E.IsReady() && e.Health < GetEDamage(e))
+                    {
+                        E.Cast();
+                    }
+                }
+
             }
+
+            //foreach (
+            //    var e in
+            //        HeroManager.Enemies.Where(e => e.HasBuff("kalistaexpungemarker") && e.IsValidTarget(E.Range) && e.Health < GetEDamage(e)))
+            //{
+            //    E.Cast();
+            //}
+
+            //if (GetValue<KeyBind>("JumpTo").Active)
+            //{
+            //    JumpTo();
+            //}
 
             //if (GetValue<KeyBind>("JumpTo").Active)
             //{
