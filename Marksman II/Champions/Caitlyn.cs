@@ -3,13 +3,14 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Security.Policy;
 using LeagueSharp;
 using LeagueSharp.Common;
 using Marksman.Common;
 using Marksman.Utils;
 using SharpDX;
 using Color = System.Drawing.Color;
-
+using Orbwalking = Marksman.Orb.Orbwalking;
 
 #endregion
 
@@ -57,9 +58,6 @@ namespace Marksman.Champions
 
             AntiGapcloser.OnEnemyGapcloser += AntiGapcloser_OnEnemyGapcloser;
             Drawing.OnEndScene += DrawingOnOnEndScene;
-            Obj_AI_Base.OnProcessSpellCast += Obj_AI_Hero_OnProcessSpellCast;
-
-            
 
             Obj_AI_Base.OnBuffAdd += (sender, args) =>
                 {
@@ -107,8 +105,37 @@ namespace Marksman.Champions
             }
         }
 
-        public void Obj_AI_Hero_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
+        public override void Spellbook_OnCastSpell(Spellbook sender, SpellbookCastSpellEventArgs args)
         {
+            //if (args.Slot == SpellSlot.W && LastCastWTick + 2000 > Utils.TickCount)
+            //{
+            //    args.Process = false;
+            //}
+            //else
+            //{
+            //    args.Process = true;
+            //}
+
+            //if (args.Slot == SpellSlot.Q)
+            //{
+            //    if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo && GetValue<bool>("UseQC"))
+            //    {
+            //        var t = TargetSelector.GetTarget(Q.Range - 20, TargetSelector.DamageType.Physical);
+            //        if (!t.IsValidTarget())
+            //        {
+            //            args.Process = false;
+            //        }
+            //        else
+            //        {
+            //            args.Process = true;
+            //            //CastQ(t);
+            //        }
+            //    }
+            //}
+        }
+        public override void Obj_AI_Hero_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
+        {
+
             if (args.Slot == SpellSlot.W)
             {
                 LastCastWTick = Utils.TickCount;
@@ -130,6 +157,8 @@ namespace Marksman.Champions
             var t = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical);
             if (t.IsValidTarget())
             {
+                Render.Circle.DrawCircle(t.Position, 105f, Color.GreenYellow);
+
                 var wcCenter = ObjectManager.Player.Position.Extend(t.Position,
                     ObjectManager.Player.Distance(t.Position)/2);
 
@@ -294,7 +323,7 @@ namespace Marksman.Champions
 
             Obj_AI_Hero t;
 
-            if (W.IsReady() && GetValue<bool>("AutoWI"))
+            if (W.IsReady() && (GetValue<StringList>("AutoWI").SelectedIndex == 1 || (GetValue<StringList>("AutoWI").SelectedIndex == 2 && ComboActive)))
             {
                 t = TargetSelector.GetTarget(W.Range, TargetSelector.DamageType.Physical);
                 if (t.IsValidTarget(W.Range))
@@ -316,7 +345,7 @@ namespace Marksman.Champions
                 }
             }
 
-            if (Q.IsReady() && GetValue<bool>("AutoQI"))
+            if (Q.IsReady() && (GetValue<StringList>("AutoQI").SelectedIndex == 1 || (GetValue<StringList>("AutoQI").SelectedIndex == 2 && ComboActive)))
             {
                 t = TargetSelector.GetTarget(Q.Range - 30, TargetSelector.DamageType.Physical);
                 if (t.IsValidTarget(Q.Range)
@@ -364,19 +393,19 @@ namespace Marksman.Champions
                 return;
             }
 
-            var useQ = GetValue<bool>("UseQ" + (ComboActive ? "C" : "H"));
+            //var useQ = GetValue<bool>("UseQ" + (ComboActive ? "C" : "H"));
             var useW = GetValue<bool>("UseWC");
             var useE = GetValue<bool>("UseEC");
             var useR = GetValue<bool>("UseRC");
 
-            if (Q.IsReady() && useQ)
-            {
-                t = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical);
-                if (t != null)
-                {
-                    CastQ(t);
-                }
-            }
+            //if (Q.IsReady() && useQ)
+            //{
+            //    t = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical);
+            //    if (t != null)
+            //    {
+            //        CastQ(t);
+            //    }
+            //}
 
             if (useE && E.IsReady())
             {
@@ -432,8 +461,8 @@ namespace Marksman.Champions
             var t = target as Obj_AI_Hero;
             if (t == null || (!ComboActive && !HarassActive) || unit.IsMe) return;
 
-            var useQ = GetValue<bool>("UseQ" + (ComboActive ? "C" : "H"));
-            if (useQ) Q.Cast(t, false, true);
+            //var useQ = GetValue<bool>("UseQ" + (ComboActive ? "C" : "H"));
+            //if (useQ) Q.Cast(t, false, true);
 
             base.Orbwalking_AfterAttack(unit, target);
         }
@@ -479,8 +508,8 @@ namespace Marksman.Champions
             config.AddItem(new MenuItem("Misc.AntiGapCloser", "E Anti Gap Closer").SetValue(true));
             config.AddItem(new MenuItem("UseEQC" + Id, "Use E-Q Combo").SetValue(new KeyBind("T".ToCharArray()[0], KeyBindType.Press)));
             config.AddItem(new MenuItem("Dash" + Id, "Dash to Mouse").SetValue(new KeyBind("Z".ToCharArray()[0], KeyBindType.Press)));
-            config.AddItem(new MenuItem("AutoQI" + Id, "Auto Q (Stun/Snare/Taunt/Slow)").SetValue(true));
-            config.AddItem(new MenuItem("AutoWI" + Id, "Auto W (Stun/Snare/Taunt)").SetValue(true));
+            config.AddItem(new MenuItem("AutoQI" + Id, "Auto Q (Stun/Snare/Taunt/Slow)").SetValue(new StringList(new []{"Off", "On: Everytime", "On: Combo Mode"}, 2)));
+            config.AddItem(new MenuItem("AutoWI" + Id, "Auto W (Stun/Snare/Taunt)").SetValue(new StringList(new[] { "Off", "On: Everytime", "On: Combo Mode" }, 2)));
 
             return true;
         }
