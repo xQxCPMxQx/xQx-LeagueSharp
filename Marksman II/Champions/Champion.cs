@@ -96,11 +96,15 @@ namespace Marksman.Champions
 
         public virtual void Orbwalking_AfterAttack(AttackableUnit unit, AttackableUnit target) { }
         public virtual void Orbwalking_BeforeAttack(Orbwalking.BeforeAttackEventArgs args) { }
-        public virtual void Spellbook_OnCastSpell(Spellbook sender, SpellbookCastSpellEventArgs args) { }
+
         public virtual void OnCreateObject(GameObject sender, EventArgs args) { }
         public virtual void OnDeleteObject(GameObject sender, EventArgs args) { }
+
         public virtual void Obj_AI_Base_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args) { }
         public virtual void Obj_AI_Base_OnBuffAdd(Obj_AI_Base sender, Obj_AI_BaseBuffAddEventArgs args) { }
         public virtual void Obj_AI_Base_OnBuffRemove(Obj_AI_Base sender, Obj_AI_BaseBuffRemoveEventArgs args) { }
+
+        public virtual void Spellbook_OnCastSpell(Spellbook sender, SpellbookCastSpellEventArgs args) { }
+        public virtual void Obj_AI_Hero_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args) { }     
     }
 }
