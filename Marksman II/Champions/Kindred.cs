@@ -24,7 +24,7 @@ namespace Marksman.Champions
     {
         void Orbwalking_AfterAttack(AttackableUnit unit, AttackableUnit target);
         void Drawing_OnDraw(EventArgs args);
-        void Game_OnGameUpdate(EventArgs args);
+        void Game_OnUpdate(EventArgs args);
         bool ComboMenu(Menu config);
         bool HarassMenu(Menu config);
         bool MiscMenu(Menu config);
@@ -190,7 +190,7 @@ namespace Marksman.Champions
             }
         }
 
-        public override void Game_OnGameUpdate(EventArgs args)
+        public override void Game_OnUpdate(EventArgs args)
         {
             if (R.IsReady())
             {

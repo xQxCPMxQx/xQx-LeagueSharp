@@ -6,6 +6,7 @@ using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
 using Marksman.Utils;
+using Marksman.Common;
 using SharpDX;
 using Orbwalking = Marksman.Orb.Orbwalking;
 
@@ -122,7 +123,7 @@ namespace Marksman.Champions
             }
         }
 
-        public override void Game_OnGameUpdate(EventArgs args)
+        public override void Game_OnUpdate(EventArgs args)
         {
             //var t1 = TargetSelector.GetTarget(2000, TargetSelector.DamageType.Physical);
             //if (t1.IsValidTarget())
@@ -144,6 +145,18 @@ namespace Marksman.Champions
                 Program.ChampionClass.Orbwalker.ForceTarget(x);
             }
             */
+
+            if (GetValue<bool>("PingCH"))
+            {
+                foreach (var enemy in
+                    HeroManager.Enemies.Where(
+                        enemy =>
+                            R.IsReady() && enemy.IsValidTarget() && R.GetDamage(enemy) > enemy.Health))
+                {
+                    //Marksman.Utils.Utils.MPing.Ping(enemy.Position.To2D());
+                }
+            }
+
             if (Q.IsReady() && GetValue<bool>("SwapDistance") && Program.ChampionClass.Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
             {
                 var activeQ = ObjectManager.Player.Spellbook.GetSpell(SpellSlot.Q).Level * 25 + 650;
@@ -174,7 +187,7 @@ namespace Marksman.Champions
                         R.IsReady() && t.IsValidTarget() && R.GetDamage(t) > t.Health
                         && t.Distance(ObjectManager.Player) > Orbwalking.GetRealAutoAttackRange(null) + 65 + QAddRange))
                 {
-            //        Utils.Utils.MPing.Ping(enemy.Position.To2D(), 2, PingCategory.Normal);
+                 //   Utils.Utils.MPing.Ping(enemy.Position.To2D(), 2, PingCategory.Normal);
                 }
             }
 
@@ -251,15 +264,21 @@ namespace Marksman.Champions
             
             if (GetValue<KeyBind>("CastR").Active && R.IsReady())
             {
-                var t = TargetSelector.GetTarget(1500, TargetSelector.DamageType.Physical);
-                if (t.IsValidTarget())
+                foreach (var t in HeroManager.Enemies.Where(e => R.GetDamage(e) >= e.Health && e.IsValidTarget(4000)))
                 {
-                    if (ObjectManager.Player.GetSpellDamage(t, SpellSlot.R) > t.Health && !t.IsZombie)
-                    {
-                        R.CastIfHitchanceGreaterOrEqual(t);
-                        //R.CastIfHitchanceEquals(t, HitChance.High, false);
-                    }
+                    R.CastIfHitchanceGreaterOrEqual(t);
                 }
+
+
+                //var t = TargetSelector.GetTarget(1500, TargetSelector.DamageType.Physical);
+                //if (t.IsValidTarget())
+                //{
+                //    if (ObjectManager.Player.GetSpellDamage(t, SpellSlot.R) > t.Health && !t.IsZombie)
+                //    {
+                //        R.CastIfHitchanceGreaterOrEqual(t);
+                //        //R.CastIfHitchanceEquals(t, HitChance.High, false);
+                //    }
+                //}
             }
 
             if (GetValue<bool>("SwapQ") && FishBoneActive && !ComboActive)
@@ -571,6 +590,7 @@ namespace Marksman.Champions
             config.AddItem(new MenuItem("ROverKill" + Id, "R: Kill Steal").SetValue(true)).SetFontStyle(FontStyle.Regular, R.MenuColor());
             config.AddItem(new MenuItem("MinRRange" + Id, "R: Min. range").SetValue(new Slider(300, 0, 1500))).SetFontStyle(FontStyle.Regular, R.MenuColor());
             config.AddItem(new MenuItem("MaxRRange" + Id, "R: Max. range").SetValue(new Slider(1700, 0, 4000))).SetFontStyle(FontStyle.Regular, R.MenuColor());
+            config.AddItem(new MenuItem("PingCH" + Id, "R: Ping Killable Enemy with R").SetValue(true));
             return true;
         }
 

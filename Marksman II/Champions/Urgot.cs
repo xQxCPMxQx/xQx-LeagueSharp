@@ -182,7 +182,7 @@ namespace Marksman.Champions
             }
         }
 
-        public override void Game_OnGameUpdate(EventArgs args)
+        public override void Game_OnUpdate(EventArgs args)
         {
             if (R.Level > 0)
                 R.Range = 150*R.Level + 400;

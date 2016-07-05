@@ -74,7 +74,7 @@ namespace Marksman.Champions
             return false;
         }
 
-        public override void Game_OnGameUpdate(EventArgs args)
+        public override void Game_OnUpdate(EventArgs args)
         {
             Orbwalker.SetAttack(Game.Time > rqTumbleBuffEndOfTime);
 

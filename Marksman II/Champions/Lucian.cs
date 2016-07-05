@@ -284,7 +284,7 @@ namespace Marksman.Champions
             }
         }
 
-        public override void Game_OnGameUpdate(EventArgs args)
+        public override void Game_OnUpdate(EventArgs args)
         {
             foreach (var b in ObjectManager.Player.Buffs)
             {
@@ -662,10 +662,27 @@ namespace Marksman.Champions
 
         public override void PermaActive()
         {
-            if (Orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.Combo)
+            if (!ComboActive)
             {
                 return;
             }
+
+            if (ComboActive && GetValue<StringList>("UseEC").SelectedIndex == 2 && E.IsReady())
+            {
+                var nRange = ObjectManager.Player.HealthPercent < 25 ? 550 : 450;
+                var nSum = HeroManager.Enemies.Where(e => e.IsValidTarget(nRange) && e.IsFacing(ObjectManager.Player)).Sum(e => e.HealthPercent);
+                if (nSum > ObjectManager.Player.HealthPercent)
+                {
+                    var nResult = HeroManager.Enemies.FirstOrDefault(e => e.IsValidTarget(nRange));
+                    if (nResult != null)
+                    {
+                        var nPosition = ObjectManager.Player.Position.Extend(nResult.Position, -E.Range);
+                        E.Cast(nPosition);
+                    }
+                }
+                Render.Circle.DrawCircle(ObjectManager.Player.Position, nRange, Color.DarkSalmon);
+            }
+
 
             var enemy = HeroManager.Enemies.Find(e => e.IsValidTarget(E.Range + (Q.IsReady() ? Q.Range : Orbwalking.GetRealAutoAttackRange(null) + 65)) && !e.IsZombie);
             if (enemy != null)
@@ -676,7 +693,7 @@ namespace Marksman.Champions
                     {
                         W.Cast(enemy.Position);
                     }
-                    else if (E.IsReady() && GetValue<StringList>("UseEC").SelectedIndex != 0)
+                    else if (E.IsReady() && GetValue<StringList>("UseEC").SelectedIndex == 1)
                     {
                         E.Cast(enemy.Position);
                     }
@@ -691,7 +708,7 @@ namespace Marksman.Champions
 //                    if (enemy.Distance(ObjectManager.Player) > Orbwalking.GetRealAutoAttackRange(null) + 65))
                 }
 
-                if (E.IsReady() && Q.IsReady() && GetValue<StringList>("UseEC").SelectedIndex != 0)
+                if (E.IsReady() && Q.IsReady() && GetValue<StringList>("UseEC").SelectedIndex == 1)
                 {
                     E.Cast(enemy.Position);
                 }

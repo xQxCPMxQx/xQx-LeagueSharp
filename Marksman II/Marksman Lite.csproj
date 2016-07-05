@@ -82,7 +82,9 @@
   <ItemGroup>
     <Compile Include="Champions\PlayerSpells.cs" />
     <Compile Include="Common\CommonEmote.cs" />
+    <Compile Include="Common\CommonFontExtention.cs" />
     <Compile Include="Common\CommonGeometry.cs" />
+    <Compile Include="Common\CommonObjectDetector.cs" />
     <Compile Include="Common\CommonSettings.cs" />
     <Compile Include="Common\CommonSkinManager.cs" />
     <Compile Include="Common\CommonAutoBush.cs" />
@@ -100,6 +102,7 @@
     <Compile Include="Champions\Kindred.cs" />
     <Compile Include="Champions\Kogmaw.cs" />
     <Compile Include="Common\SpellBlockManager.cs" />
+    <Compile Include="DangerousTargets.cs" />
     <Compile Include="Orb\Orbwalking.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

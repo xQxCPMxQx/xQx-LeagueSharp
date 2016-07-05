@@ -20,7 +20,6 @@ namespace Marksman.Champions
         
         public string Id = "";
         public Orbwalking.Orbwalker Orbwalker;
-        public Orbwalking.Orbwalker OrbwalkerM;
         public bool ToggleActive;
 
         public T GetValue<T>(string item)
@@ -62,7 +61,10 @@ namespace Marksman.Champions
         {
             return false;
         }
-
+        public virtual bool ToolsMenu(Menu config)
+        {
+            return false;
+        }
         public virtual void Drawing_OnDraw(EventArgs args)
         {
             if (ObjectManager.Player.IsDead)
@@ -71,7 +73,8 @@ namespace Marksman.Champions
             }
         }
 
-        public virtual void Game_OnGameUpdate(EventArgs args)
+        
+        public virtual void Game_OnUpdate(EventArgs args)
         {
             PermaActive();
 
@@ -94,17 +97,31 @@ namespace Marksman.Champions
         public virtual void ExecuteJungleClear() { }
         public virtual void PermaActive() { }
 
+        public virtual void DrawingOnEndScene(EventArgs args)
+        {
+                    if (Drawing.Direct3DDevice == null || Drawing.Direct3DDevice.IsDisposed)
+            {
+                return;
+            }
+            if (ObjectManager.Player.IsDead)
+            {
+                return;
+            }
+
+        }
+
         public virtual void Orbwalking_AfterAttack(AttackableUnit unit, AttackableUnit target) { }
         public virtual void Orbwalking_BeforeAttack(Orbwalking.BeforeAttackEventArgs args) { }
 
         public virtual void OnCreateObject(GameObject sender, EventArgs args) { }
         public virtual void OnDeleteObject(GameObject sender, EventArgs args) { }
 
-        public virtual void Obj_AI_Base_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args) { }
         public virtual void Obj_AI_Base_OnBuffAdd(Obj_AI_Base sender, Obj_AI_BaseBuffAddEventArgs args) { }
         public virtual void Obj_AI_Base_OnBuffRemove(Obj_AI_Base sender, Obj_AI_BaseBuffRemoveEventArgs args) { }
 
         public virtual void Spellbook_OnCastSpell(Spellbook sender, SpellbookCastSpellEventArgs args) { }
-        public virtual void Obj_AI_Hero_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args) { }     
+        public virtual void Obj_AI_Base_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args) { }
+
+
     }
 }

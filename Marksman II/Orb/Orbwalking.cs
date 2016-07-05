@@ -865,7 +865,7 @@ namespace Marksman.Orb
 
                 var menuAttackSpeed = new Menu("Attack Speed Limiter", "AttackSpeedLimiter").SetFontStyle(FontStyle.Regular, SharpDX.Color.Yellow);
                 menuAttackSpeed.AddItem(new MenuItem("AttackSpeedLimiter.Enabled", "Enabled").SetShared().SetValue(true)).Permashow(true, "Marksman | Attack Speed Limiter", SharpDX.Color.Aqua);
-                menuAttackSpeed.AddItem(new MenuItem("AttackSpeedLimiter.MaxAttackSpeed", "Limit Attack Speed [Recommend: 2150]:").SetShared().SetValue(new Slider(2150, 650, 3500)));
+                menuAttackSpeed.AddItem(new MenuItem("AttackSpeedLimiter.MaxAttackSpeed", "Limit Attack Speed [Recommend: 1900]:").SetShared().SetValue(new Slider(1900, 650, 3500)));
                 menuAttackSpeed.AddItem(new MenuItem("AttackSpeedLimiter.LimitWhen", "Limit Time:").SetShared().SetValue(new StringList(new[] { "I'm moving / kite mode", "Limit Everytime" }, 0)));
                 menuAttackSpeed.AddItem(new MenuItem("AttackSpeedLimiter.Load", "Load Recommended Settings:").SetShared().SetValue(false)).SetFontStyle(FontStyle.Regular, SharpDX.Color.Yellow);
                 config.AddSubMenu(menuAttackSpeed);
@@ -1487,7 +1487,7 @@ namespace Marksman.Orb
                 if (config.Item("AttackSpeedLimiter.Load").GetValue<bool>())
                 {
                     config.Item("AttackSpeedLimiter.Enabled").SetValue(true);
-                    config.Item("AttackSpeedLimiter.MaxAttackSpeed").SetValue(new Slider(2150, 650, 3500));
+                    config.Item("AttackSpeedLimiter.MaxAttackSpeed").SetValue(new Slider(1900, 650, 3500));
                     config.Item("AttackSpeedLimiter.LimitWhen").SetValue(new StringList(new[] { "I'm moving / kite mode", "Everytime" }, 0));
                     config.Item("AttackSpeedLimiter.Load").SetValue(false);
                 }

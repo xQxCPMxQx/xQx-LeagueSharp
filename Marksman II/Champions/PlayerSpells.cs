@@ -14,7 +14,7 @@ namespace Marksman.Champions
         public static void CastIfHitchanceGreaterOrEqual(this Spell spell, Obj_AI_Hero t)
         {
             var nPrediction = spell.GetPrediction(t);
-            var nHitPosition = nPrediction.CastPosition.Extend(ObjectManager.Player.Position, -140);
+            var nHitPosition = nPrediction.CastPosition.Extend(ObjectManager.Player.Position, -130);
             if (nPrediction.Hitchance >= spell.GetHitchance())
             {
                 spell.Cast(nHitPosition);

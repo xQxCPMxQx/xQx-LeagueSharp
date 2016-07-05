@@ -77,7 +77,7 @@ namespace Marksman.Champions
             }
         }
 
-        public override void Game_OnGameUpdate(EventArgs args)
+        public override void Game_OnUpdate(EventArgs args)
         {
 
             //var lee = HeroManager.Allies.Find(l => l.ChampionName.ToLower() == "leesin");
@@ -96,6 +96,10 @@ namespace Marksman.Champions
             {
                 if (ObjectManager.Player.HasBuff("Recall"))
                     return;
+
+                if (ObjectManager.Player.HasBuff("CamouflageStealth"))
+                    return;
+
                 var qTarget = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical);
                 if (Q.IsReady() && qTarget.IsValidTarget())
                     Q.CastOnUnit(qTarget);

@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
+using Marksman.Common;
 using Marksman.Orb;
 using SharpDX;
 using Color = System.Drawing.Color;
@@ -43,10 +45,45 @@ namespace Marksman.Champions
             GameObject.OnDelete += OnDeleteObject;
             AntiGapcloser.OnEnemyGapcloser += OnEnemyGapcloser;
             Interrupter2.OnInterruptableTarget += Interrupter2_OnInterruptableTarget;
-            Drawing.OnEndScene += DrawingOnOnEndScene;
             Utils.Utils.PrintMessage("Draven loaded.");
         }
 
+        public override void DrawingOnEndScene(EventArgs args)
+        {
+
+            var xComboString = "Combo Mode: ";
+            System.Drawing.Color xComboColor = System.Drawing.Color.FromArgb(100, 255, 200, 37);
+
+            string[] vComboString = new[]
+            {
+                "Offensive", "Deffensive"
+            };
+
+            System.Drawing.Color[] vComboColor = new[]
+            {
+                System.Drawing.Color.FromArgb(255, 4, 0, 255),
+                System.Drawing.Color.Red,
+                System.Drawing.Color.FromArgb(255, 46, 47, 46),
+            };
+
+            var nComboMode =GetValue<StringList>("Combo.Mode").SelectedIndex;
+            xComboString = xComboString + vComboString[nComboMode];
+            xComboColor = vComboColor[nComboMode];
+
+            Common.CommonGeometry.DrawBox(new Vector2(Drawing.Width * 0.45f, Drawing.Height * 0.80f), 125, 18, xComboColor, 1, System.Drawing.Color.Black);
+            Common.CommonGeometry.DrawText(CommonGeometry.Text, xComboString, Drawing.Width * 0.455f, Drawing.Height * 0.803f, SharpDX.Color.Wheat);
+
+            var rCircle = Config.Item("DrawRMini").GetValue<bool>();
+            if (rCircle)
+            {
+                var maxRRange = Config.Item("UseRCMaxR").GetValue<Slider>().Value;
+                var rMax = Config.Item("DrawRMax").GetValue<Circle>();
+#pragma warning disable 618
+                Utility.DrawCircle(ObjectManager.Player.Position, maxRRange, rMax.Color, 1, 23, true);
+#pragma warning restore 618
+            }
+
+        }
         public void OnEnemyGapcloser(ActiveGapcloser gapcloser)
         {
             if (E.IsReady() && Config.Item("EGapCloser").GetValue<bool>() && gapcloser.Sender.IsValidTarget(E.Range))
@@ -69,7 +106,7 @@ namespace Marksman.Champions
             {
                 for (var i = 0; i < ExistingReticles.Count; i++)
                 {
-                    if (ExistingReticles[i].NetworkId == sender.NetworkId)
+                    if (Math.Abs(ExistingReticles[i].NetworkId - sender.NetworkId) < 0.00001)
                     {
                         ExistingReticles.RemoveAt(i);
                         return;
@@ -93,19 +130,7 @@ namespace Marksman.Champions
             }
         }
 
-        private void DrawingOnOnEndScene(EventArgs args)
-        {
-            var rCircle = Config.Item("DrawRMini").GetValue<bool>();
-            if (rCircle)
-            {
-                var maxRRange = Config.Item("UseRCMaxR").GetValue<Slider>().Value;
-                var rMax = Config.Item("DrawRMax").GetValue<Circle>();
-#pragma warning disable 618
-                Utility.DrawCircle(ObjectManager.Player.Position, maxRRange, rMax.Color, 1, 23, true);
-#pragma warning restore 618
-            }
-        }
-
+        
         public override void Drawing_OnDraw(EventArgs args)
         {
             var drawOrbwalk = Config.Item("DrawOrbwalk").GetValue<Circle>();
@@ -130,8 +155,7 @@ namespace Marksman.Champions
                 if (GetOrbwalkPos() != Game.CursorPos &&
                     (ComboActive || LaneClearActive || Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.LastHit))
                 {
-                    Render.Circle.DrawCircle(Game.CursorPos, Config.Item("CatchRadius").GetValue<Slider>().Value,
-                        Color.Red);
+                    Render.Circle.DrawCircle(Game.CursorPos, Config.Item("CatchRadius").GetValue<Slider>().Value,Color.Red);
                 }
                 else
                 {
@@ -161,7 +185,7 @@ namespace Marksman.Champions
             }
         }
 
-        public override void Game_OnGameUpdate(EventArgs args)
+        public override void Game_OnUpdate(EventArgs args)
         {
             var orbwalkPos = GetOrbwalkPos();
             var cursor = Game.CursorPos;
@@ -174,6 +198,7 @@ namespace Marksman.Champions
             {
                 Orbwalker.SetMarksmanOrbwalkingPoint(cursor);
             }
+
             Obj_AI_Hero t;
             //Combo
             if (ComboActive)
@@ -186,6 +211,7 @@ namespace Marksman.Champions
                 {
                     return;
                 }
+
                 if (W.IsReady() && Config.Item("UseWC").GetValue<bool>() && t.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + 65) &&
                     ObjectManager.Player.Buffs.FirstOrDefault(
                         buff => buff.Name == "dravenfurybuff" || buff.Name == "DravenFury") == null)
@@ -210,7 +236,7 @@ namespace Marksman.Champions
             }
 
             //Peel from melees
-            if (Config.Item("EPeel").GetValue<bool>()) //Taken from ziggs(by pq/esk0r)
+            if (Config.Item("EPeel").GetValue<bool>()) 
             {
                 foreach (var pos in from enemy in ObjectManager.Get<Obj_AI_Hero>()
                                     where
@@ -249,6 +275,8 @@ namespace Marksman.Champions
 
         public override bool ComboMenu(Menu config)
         {
+            config.AddItem(new MenuItem("Combo.Mode" + Id, "Combo Mode:").SetValue(new StringList(new[] { "Q:R", "W:R" }, 1)).SetFontStyle(FontStyle.Regular, SharpDX.Color.GreenYellow));
+
             config.AddItem(new MenuItem("UseQC", "Use Q").SetValue(true));
             config.AddItem(new MenuItem("UseWC", "Use W").SetValue(true));
             config.AddItem(new MenuItem("UseEC", "Use E").SetValue(true));

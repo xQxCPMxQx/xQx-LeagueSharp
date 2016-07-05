@@ -99,7 +99,7 @@ namespace Marksman.Champions
             return fComboDamage;
         }
 
-        public override void Game_OnGameUpdate(EventArgs args)
+        public override void Game_OnUpdate(EventArgs args)
         {
             if (Q.IsReady() && GetValue<KeyBind>("UseQTH").Active)
             {

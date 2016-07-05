@@ -43,14 +43,17 @@ namespace Marksman.Champions
             var t = vTarget as Obj_AI_Hero;
             if (t != null && (ComboActive || HarassActive) && unit.IsMe)
             {
-                var useQ = GetValue<bool>("UseQ" + (ComboActive ? "C" : "H"));
+                //var useQ = GetValue<bool>("UseQ" + (ComboActive ? "C" : "H"));
                 var useW = GetValue<bool>("UseW" + (ComboActive ? "C" : "H"));
 
-                if (useQ)
-                    Q.CastOnUnit(t);
+                //if (useQ)
+                //    Q.CastOnUnit(t);
 
                 if (useW && W.IsReady())
+                {
                     W.CastOnUnit(ObjectManager.Player);
+                    
+                }
             }
         }
 
@@ -79,7 +82,7 @@ namespace Marksman.Champions
             }
         }
 
-        public override void Game_OnGameUpdate(EventArgs args)
+        public override void Game_OnUpdate(EventArgs args)
         {
             var ultCasting = Game.Time - UltiCastedTime < 0.2 || ObjectManager.Player.IsChannelingImportantSpell();
             Orbwalking.Attack = !ultCasting;

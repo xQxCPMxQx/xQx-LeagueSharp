@@ -125,7 +125,7 @@ namespace Marksman.Champions
                 R.Cast(nHitPosition);
         }
 
-        public override void Game_OnGameUpdate(EventArgs args)
+        public override void Game_OnUpdate(EventArgs args)
         {
             UltiBuffStacks = GetUltimateBuffStacks();
 

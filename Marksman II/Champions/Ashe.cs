@@ -1,9 +1,11 @@
 #region
 
 using System;
+using System.ComponentModel;
 using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
+using Marksman.Common;
 using Marksman.Orb;
 using SharpDX;
 using SharpDX.Direct3D9;
@@ -39,6 +41,7 @@ namespace Marksman.Champions
 
             Utility.HpBarDamageIndicator.DamageToUnit = GetComboDamage;
             Utility.HpBarDamageIndicator.Enabled = true;
+            Drawing.OnEndScene += DrawingOnOnEndScene;
 
             Obj_AI_Base.OnBuffAdd += (sender, args) =>
             {
@@ -63,6 +66,41 @@ namespace Marksman.Champions
             };
 
             Utils.Utils.PrintMessage("Ashe loaded.");
+        }
+
+        private static void DrawingOnOnEndScene(EventArgs args)
+        {
+            if (ObjectManager.Player.IsDead)
+            {
+                return;
+            }
+
+            if (Drawing.Direct3DDevice == null || Drawing.Direct3DDevice.IsDisposed)
+            {
+                return;
+            }
+
+            var x = 0;
+            foreach (var b in ObjectManager.Player.Buffs.Where(buff => buff.DisplayName == "AsheQ"))
+            {
+                x = b.Count;
+            }
+
+            for (int i = 1; i < 5; i++)
+            {
+                CommonGeometry.DrawBox(new Vector2(ObjectManager.Player.HPBarPosition.X + 56 + (i * 17), ObjectManager.Player.HPBarPosition.Y + 25), 15, 4, System.Drawing.Color.Transparent, 1, System.Drawing.Color.Black);
+            }
+
+            var headshotReady = ObjectManager.Player.Buffs.Any(buff => buff.DisplayName == "AsheQCastReady");
+            for (int i = 1; i < (headshotReady ? 5 : x + 1); i++)
+            {
+                CommonGeometry.DrawBox(new Vector2(ObjectManager.Player.HPBarPosition.X + 57 + (i * 17), ObjectManager.Player.HPBarPosition.Y + 26), 13, 3, headshotReady ? System.Drawing.Color.Red : System.Drawing.Color.LightGreen, 0, System.Drawing.Color.Black);
+            }
+        }
+
+        private static int AsheQ
+        {
+            get { return ObjectManager.Player.Buffs.Count(buff => buff.DisplayName == "AsheQ"); }
         }
 
         private static bool AsheQCastReady
@@ -117,12 +155,16 @@ namespace Marksman.Champions
             }
         }
 
-        public override void Game_OnGameUpdate(EventArgs args)
+        public override void Game_OnUpdate(EventArgs args)
         {
             if (!ComboActive)
             {
                 var t = TargetSelector.GetTarget(W.Range, TargetSelector.DamageType.Physical);
-                if (!t.IsValidTarget() || !W.IsReady()) return;
+
+                if (!t.IsValidTarget() || !W.IsReady())
+                {
+                    return;
+                }
 
                 if (Program.Config.Item("UseWTH").GetValue<KeyBind>().Active)
                 {
@@ -144,6 +186,13 @@ namespace Marksman.Champions
                 var useW = Config.Item("UseWC" + Id).GetValue<bool>();
 
                 var t = TargetSelector.GetTarget(W.Range, TargetSelector.DamageType.Physical);
+
+                if (Program.Config.SubMenu("Combo").Item("UseRC").GetValue<bool>() && R.IsReady() &&
+                    t.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + 65) && AsheQ >= 2 &&
+                    t.Health > R.GetDamage(t) + ObjectManager.Player.TotalAttackDamage*4)
+                {
+                    R.Cast(t);
+                }
 
                 if (Q.IsReady() && AsheQCastReady)
                 {
@@ -414,6 +463,7 @@ namespace Marksman.Champions
 
         public override void Drawing_OnDraw(EventArgs args)
         {
+        
             //foreach (var e in HeroManager.Enemies.Where(e => e.IsValidTarget(3500)))
             //{
             //    var x = new Geometry.Polygon.Line(e.Position, e.Path[0]);

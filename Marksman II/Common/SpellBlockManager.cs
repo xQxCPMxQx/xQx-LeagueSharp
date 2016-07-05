@@ -174,7 +174,7 @@ namespace Marksman.Common
                     }
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // ignored
             }

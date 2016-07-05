@@ -85,7 +85,7 @@ namespace Marksman.Champions
 
         public void Obj_AI_Hero_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
         {
-            if (!E.IsReady() || !(sender is Obj_AI_Hero))
+            if (!E.IsReady() || !(sender is Obj_AI_Hero) || !sender.Target.IsMe)
             {
                 return;
             }
@@ -100,12 +100,12 @@ namespace Marksman.Champions
                     E.Cast();
                 }
             }
-
-            if (((Obj_AI_Hero) sender).ChampionName.ToLower() == "vayne" && args.SData.Name == ((Obj_AI_Hero) sender).GetSpell(SpellSlot.E).Name)
+            return;
+            if (((Obj_AI_Hero)sender).ChampionName.ToLower() == "vayne" && args.SData.Name == ((Obj_AI_Hero)sender).GetSpell(SpellSlot.E).Name)
             {
                 for (var i = 1; i < 8; i++)
                 {
-                    var championBehind = ObjectManager.Player.Position + Vector3.Normalize(((Obj_AI_Hero) sender).ServerPosition - ObjectManager.Player.Position)*(-i*50);
+                    var championBehind = ObjectManager.Player.Position + Vector3.Normalize(((Obj_AI_Hero)sender).ServerPosition - ObjectManager.Player.Position) * (-i * 50);
                     if (championBehind.IsWall())
                     {
                         E.Cast();
@@ -114,7 +114,7 @@ namespace Marksman.Champions
             }
         }
 
-        public override void Game_OnGameUpdate(EventArgs args)
+        public override void Game_OnUpdate(EventArgs args)
         {
             if (GetValue<bool>("AutoQ") || GetValue<bool>("UseQ"))
             {
@@ -285,8 +285,8 @@ namespace Marksman.Champions
         {
             config.AddItem(new MenuItem("AutoQ" + Id, "Auto Q on Stun/Slow/Fear/Taunt/Snare").SetValue(true));
             config.AddItem(new MenuItem("Misc.UseW.Turret" + Id, "Use W for Turret").SetValue(false));
-            config.AddItem(new MenuItem("Misc.UseW.Inhibitor" + Id, "Use W for Inhibitor").SetValue(true));
-            config.AddItem(new MenuItem("Misc.UseW.Nexus" + Id, "Use W for Nexus").SetValue(true));
+            config.AddItem(new MenuItem("Misc.UseW.Inhibitor" + Id, "Use W for Inhibitor").SetValue(false));
+            config.AddItem(new MenuItem("Misc.UseW.Nexus" + Id, "Use W for Nexus").SetValue(false));
             return true;
         }
 

@@ -50,6 +50,15 @@ namespace Marksman.Common
                         break;
                     }
 
+
+                    case "kalista":
+                    {
+                        strSkins = new[]
+                        {
+                            "Classic Kalista", "Blood Moon Kalista", "Championship Kalista"
+                        };
+                            break;
+                        }
                     case "kogmaw":
                     {
                         strSkins = new[]
@@ -95,7 +104,8 @@ namespace Marksman.Common
                         strSkins = new[]
                         {
                             "Classic Tristana", "Riot Girl Tristana", "Earnest Elf Tristana", "Firefighter Tristana",
-                            "Guerilla Tristana", "Buccaneer Tristana", "Rocket Girl Tristana", "Dragon Trainer Tristana"
+                            "Guerilla Tristana", "Buccaneer Tristana", "Rocket Girl Tristana", "Chrome Tristana I",
+                            "Chrome Tristana II", "Chrome Tristana III", "Dragon Trainer Tristana"
                         };
                         break;
                     }

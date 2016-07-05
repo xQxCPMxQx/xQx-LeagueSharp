@@ -52,6 +52,36 @@ namespace Marksman.Common
         public static Font Text;
         public static Font TextPassive;
 
+   public static void Init()
+        {
+            Text = new Font(
+                Drawing.Direct3DDevice,
+                new FontDescription
+                {
+                    FaceName = "Calibri",
+                    Height = 15,
+                    OutputPrecision = FontPrecision.Default,
+                    Quality = FontQuality.Default
+                    ,//Weight = FontWeight.Bold
+                    
+                });
+
+            TextPassive = new Font(
+               Drawing.Direct3DDevice,
+               new FontDescription
+               {
+                   FaceName = "Calibri",
+                   Height = 11,
+                   OutputPrecision = FontPrecision.Default,
+                   Quality = FontQuality.Draft
+               });
+
+            Drawing.OnPreReset += DrawingOnOnPreReset;
+            Drawing.OnPostReset += DrawingOnOnPostReset;
+            AppDomain.CurrentDomain.DomainUnload += CurrentDomainOnDomainUnload;
+            AppDomain.CurrentDomain.ProcessExit += CurrentDomainOnDomainUnload;
+        }
+
         public static Vector3 CenterOfVectors(Vector3[] vectors)
         {
             var sum = Vector3.Zero;
@@ -97,33 +127,6 @@ namespace Marksman.Common
             TextPassive.OnLostDevice();
         }
 
-        public static void Init()
-        {
-
-
-            Text = new Font(
-                Drawing.Direct3DDevice,
-                new FontDescription
-                {
-                    FaceName = "Tahoma",
-                    Height = 13,
-                    OutputPrecision = FontPrecision.Default,
-                    Quality = FontQuality.Default
-                });
-            TextPassive = new Font(
-               Drawing.Direct3DDevice,
-               new FontDescription
-               {
-                   FaceName = "Calibri",
-                   Height = 11,
-                   OutputPrecision = FontPrecision.Default,
-                   Quality = FontQuality.Draft
-               });
-            Drawing.OnPreReset += DrawingOnOnPreReset;
-            Drawing.OnPostReset += DrawingOnOnPostReset;
-            AppDomain.CurrentDomain.DomainUnload += CurrentDomainOnDomainUnload;
-            AppDomain.CurrentDomain.ProcessExit += CurrentDomainOnDomainUnload;
-        }
         public static void DrawBox(float positionX, float positionY, float width, int height, System.Drawing.Color color, int borderwidth, System.Drawing.Color borderColor, string text = "")
         {
             if (color != Color.Transparent)

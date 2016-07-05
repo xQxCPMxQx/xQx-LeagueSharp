@@ -1,18 +1,12 @@
 #region
-
 using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using LeagueSharp;
 using LeagueSharp.Common;
 using SharpDX;
-using SharpDX.Direct3D9;
-using Collision = LeagueSharp.Common.Collision;
 using Color = System.Drawing.Color;
-using Font = SharpDX.Direct3D9.Font;
 using Marksman.Common;
-
 #endregion
 
 namespace Marksman.Champions
@@ -21,13 +15,7 @@ namespace Marksman.Champions
 
     internal class Ezreal : Champion
     {
-        public static Spell Q;
-
-        public static Spell E;
-
-        public static Spell W;
-
-        public static Spell R;
+        public static Spell Q, W, E , R;
 
         private static bool haveIceBorn = false;
 
@@ -39,7 +27,7 @@ namespace Marksman.Champions
             W = new Spell(SpellSlot.W, 950);
             W.SetSkillshot(0.25f, 80f, 1600f, false, SkillshotType.SkillshotLine);
 
-            E = new Spell(SpellSlot.E);
+            E = new Spell(SpellSlot.E, 475);
 
             R = new Spell(SpellSlot.R, 2500);
             R.SetSkillshot(1f, 160f, 2000f, false, SkillshotType.SkillshotLine);
@@ -77,6 +65,30 @@ namespace Marksman.Champions
 
         public override void Drawing_OnDraw(EventArgs args)
         {
+            if (ComboActive && GetValue<bool>("UseEC") && E.IsReady())
+            {
+                var nRange = ObjectManager.Player.HealthPercent < 25 ? 550 : 450;
+                var nSum = HeroManager.Enemies.Where(e => e.IsValidTarget(nRange) && e.IsFacing(ObjectManager.Player)).Sum(e => e.HealthPercent);
+                if (nSum > ObjectManager.Player.HealthPercent)
+                {
+                    var nResult = HeroManager.Enemies.FirstOrDefault(e => e.IsValidTarget(nRange));
+                    if (nResult != null)
+                    {
+                        var nPosition = ObjectManager.Player.Position.Extend(nResult.Position, -E.Range);
+                        E.Cast(nPosition);
+                    }
+                }
+                Render.Circle.DrawCircle(ObjectManager.Player.Position, nRange, Color.DarkSalmon);
+            }
+            
+            var t = TargetSelector.GetTarget(1500, TargetSelector.DamageType.Magical);
+            if (t != null)
+            {
+                var x = ObjectManager.Player.Position.Extend(t.Position, -E.Range);
+                //var x = t.Position.Extend(ObjectManager.Player.Position, -E.Range);
+                Render.Circle.DrawCircle(x, 105f, Color.DarkSalmon);
+                
+            }
             foreach (var enemy in HeroManager.Enemies.Where(enemy => R.IsReady() && enemy.IsValidTarget() && R.GetDamage(enemy) > enemy.Health))
             {
                 Marksman.Common.CommonGeometry.DrawBox(new Vector2(Drawing.Width*0.43f, Drawing.Height*0.80f), 185, 18, Color.FromArgb(242, 255, 236, 6), 1, System.Drawing.Color.Black);
@@ -106,9 +118,30 @@ namespace Marksman.Champions
             }
         }
 
-        public override void Game_OnGameUpdate(EventArgs args)
+        public override void DrawingOnEndScene(EventArgs args)
         {
-            Console.WriteLine(Q.GetHitchance().ToString());
+            if (GetValue<bool>("PingDH"))
+            {
+                var i = 0;
+                foreach (var enemy in HeroManager.Enemies.Where(enemy => R.IsReady() && enemy.IsValidTarget() && R.GetDamage(enemy) > enemy.Health))
+                {
+                    //Game.PrintChat(HeroManager.Enemies[i].ChampionName);
+                    float a1 = (i + 1)*0.025f;
+
+                    Common.CommonGeometry.DrawBox(
+                        new Vector2(Drawing.Width*0.43f, Drawing.Height*(0.700f + (float) a1)), 150, 18,
+                        Color.FromArgb(170, 255, 0, 0), 1, System.Drawing.Color.Black);
+
+                    CommonGeometry.Text.DrawTextCentered(HeroManager.Enemies[i].ChampionName + " Killable with R",
+                        (int) (Drawing.Width*0.475f), (int) (Drawing.Height*(0.803f + a1 - 0.093f)), SharpDX.Color.Wheat);
+
+                    i += 1;
+                }
+            }
+        }
+
+        public override void Game_OnUpdate(EventArgs args)
+        {
             haveIceBorn = ObjectManager.Player.InventoryItems.Any(i => i.Id == ItemId.Iceborn_Gauntlet);
             
             if (GetValue<bool>("ChargeR.Enable") && Orbwalker.ActiveMode != Orb.Orbwalking.OrbwalkingMode.Combo)
@@ -123,21 +156,13 @@ namespace Marksman.Champions
                         select Q.GetPrediction(minions)
                         into qP
                         let hit = qP.CastPosition.Extend(ObjectManager.Player.Position, -140)
-                        where qP.Hitchance >= HitChance.High
+                        where qP.Hitchance >= Q.GetHitchance()
                         select hit)
                     {
                         Q.Cast(hit);
                     }
                 }
             }
-
-
-
-            // 3070 tear of the goddess
-         //  foreach (var i in ObjectManager.Player.InventoryItems)
-          //  {
-                //Game.PrintChat(i.IData.Id.ToString());
-        //    }
 
             if (GetValue<bool>("PingCH"))
             {
@@ -147,7 +172,7 @@ namespace Marksman.Champions
                             R.IsReady() && enemy.IsValidTarget() && R.GetDamage(enemy) > enemy.Health
                             && enemy.Distance(ObjectManager.Player) > Q.Range))
                 {
-                    //Utils.MPing.Ping(enemy.Position.To2D());
+                    Utils.MPing.Ping(enemy.Position.To2D());
                 }
             }
 
@@ -361,8 +386,9 @@ namespace Marksman.Champions
 
         public override bool ComboMenu(Menu config)
         {
-            config.AddItem(new MenuItem("UseQC" + Id, "Q").SetValue(true));
-            config.AddItem(new MenuItem("UseWC" + Id, "W").SetValue(true));
+            config.AddItem(new MenuItem("UseQC" + Id, "Q:").SetValue(true));
+            config.AddItem(new MenuItem("UseWC" + Id, "W:").SetValue(true));
+            config.AddItem(new MenuItem("UseEC" + Id, "E:").SetValue(true));
 
             var xRMenu = new Menu("R", "ComboR");
             {
@@ -414,19 +440,16 @@ namespace Marksman.Champions
             config.AddItem(new MenuItem("ChargeR.Cooldown" + Id, Utils.Tab + "if R cooldown >").SetValue(new Slider(20, 10, 120)));
             config.AddItem(new MenuItem("ChargeR.MinMana" + Id, Utils.Tab + "And Min. Mana > %").SetValue(new Slider(50, 0, 100)));
             
-            config.AddItem(
-                new MenuItem("CastR" + Id, "Cast R (2000 Range)").SetValue(
-                    new KeyBind("T".ToCharArray()[0], KeyBindType.Press)));
-            config.AddItem(new MenuItem("PingCH" + Id, "Ping Killable Enemy with R").SetValue(true));
+            config.AddItem(new MenuItem("CastR" + Id, "Cast R (2000 Range)").SetValue(new KeyBind("T".ToCharArray()[0], KeyBindType.Press)));
+            config.AddItem(new MenuItem("PingCH" + Id, "Ping Killable Enemy with R").SetValue(false));
+            config.AddItem(new MenuItem("PingDH" + Id, "Draw Killable Enemy with R").SetValue(false));
             return true;
         }
 
         public override bool DrawingMenu(Menu config)
         {
-            config.AddItem(
-                new MenuItem("DrawQ" + Id, "Q range").SetValue(new Circle(true, Color.FromArgb(100, 255, 0, 255))));
-            config.AddItem(
-                new MenuItem("DrawW" + Id, "W range").SetValue(new Circle(false, Color.FromArgb(100, 255, 255, 255))));
+            config.AddItem(new MenuItem("DrawQ" + Id, "Q range").SetValue(new Circle(true, Color.FromArgb(100, 255, 0, 255))));
+            config.AddItem(new MenuItem("DrawW" + Id, "W range").SetValue(new Circle(false, Color.FromArgb(100, 255, 255, 255))));
             var dmgAfterComboItem = new MenuItem("DamageAfterCombo", "Damage After Combo").SetValue(true);
 
             config.AddItem(dmgAfterComboItem);

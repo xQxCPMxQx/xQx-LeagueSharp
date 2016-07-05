@@ -113,11 +113,7 @@ namespace Marksman.Utils
 
         public static Obj_AI_Base GetMobs(float spellRange, MobTypes mobTypes = MobTypes.All, int minMobCount = 1)
         {
-            List<Obj_AI_Base> mobs = MinionManager.GetMinions(
-                spellRange + 200,
-                MinionTypes.All,
-                MinionTeam.Neutral,
-                MinionOrderTypes.MaxHealth);
+            List<Obj_AI_Base> mobs = MinionManager.GetMinions(spellRange + 200, MinionTypes.All, MinionTeam.Neutral, MinionOrderTypes.MaxHealth);
 
             if (mobs == null) return null;
 
@@ -127,18 +123,14 @@ namespace Marksman.Utils
                     from fBigBoys in
                         new[]
                         {
-                            "SRU_Blue", "SRU_Gromp", "SRU_Murkwolf", "SRU_Razorbeak", "SRU_Red",
-                            "SRU_Krug", "SRU_Dragon", "SRU_Baron", "Sru_Crab"
+                            "SRU_Blue", "SRU_Gromp", "SRU_Murkwolf", "SRU_Razorbeak", "SRU_Red", "SRU_Krug", "Dragon", "Baron", "Sru_Crab"
                         }
-                    where fBigBoys == fMobs.SkinName
+                    where fMobs.SkinName.Contains(fBigBoys)
                     select fMobs).FirstOrDefault();
 
-                if (oMob != null)
+                if (oMob.IsValidTarget(spellRange))
                 {
-                    if (oMob.IsValidTarget(spellRange))
-                    {
-                        return oMob;
-                    }
+                    return oMob;
                 }
             }
             else if (mobs.Count >= minMobCount)

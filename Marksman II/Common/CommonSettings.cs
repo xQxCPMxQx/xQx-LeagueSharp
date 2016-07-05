@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using LeagueSharp;
 using LeagueSharp.Common;
 using Marksman.Champions;
+using SharpDX.Direct3D9;
 
 namespace Marksman.Common
 {
@@ -15,6 +17,7 @@ namespace Marksman.Common
         public static Menu MenuLocal { get; private set; }
         private static Menu MenuCastSettings { get; set; }
         private static Menu MenuHitchanceSettings { get; set; }
+        private static Menu MenuSpellRanges { get; set; }
         public static void Init(Menu nParentMenu)
         {
             MenuLocal = new Menu("Settings", "Settings");
@@ -39,9 +42,58 @@ namespace Marksman.Common
                 MenuLocal.AddSubMenu(MenuCastSettings);
             }
 
+            LoadMenuHitchance();
+            LoadMenuSpellRanges();
+        }
+
+        private static object MagicallyCreateInstance(string className)
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+
+            var type = assembly.GetTypes()
+                .First(t => t.Name == className);
+
+            return Activator.CreateInstance(type);
+        }
+        static void LoadMenuSpellRanges()
+        {
+
+            MenuSpellRanges = new Menu("Spell Ranges:", "MenuSettings.SpellRanges");
+            {
+                switch (ObjectManager.Player.ChampionName.ToLowerInvariant())
+                {
+                    case "caitlyn":
+                    {
+                        //var caitlyn = new Caitlyn();
+                        //    foreach (var prop in caitlyn.GetType().GetProperties())
+                        //    {
+                        //        Game.PrintChat("{0}={1}", prop.Name, prop.GetValue(caitlyn, null));
+                        //    }
+                            //object x = MagicallyCreateInstance("Caitlyn");
+                            //    foreach (var p in x.GetType().GetProperties())
+                            //    {
+                            //        Console.WriteLine("{0}={1}", p.Name, p.GetValue(x, null));
+                            //    }
+
+                            MenuItem qSpell = new MenuItem("Ranges.Spell.Q", "Q:").SetValue(new Slider((int)Caitlyn.Q.Range, (int)(Caitlyn.Q.Range - 200), (int)Caitlyn.Q.Range));
+                            MenuSpellRanges.AddItem(qSpell);
+
+                            MenuItem eSpell = new MenuItem("Ranges.Spell.E", "E:").SetValue(new Slider((int)Caitlyn.E.Range, (int)(Caitlyn.E.Range - 200), (int)Caitlyn.E.Range));
+                            MenuSpellRanges.AddItem(eSpell);
+
+                            break;
+                    }
+                }
+          
+                MenuLocal.AddSubMenu(MenuSpellRanges);
+            }
+        }
+        static void LoadMenuHitchance()
+        {
+
             MenuHitchanceSettings = new Menu("Hitchance:", "MenuSettings.Hitchance");
             {
-                string[] nHitchanceList = new[] { "Medium", "High", "VeryHigh" }; 
+                string[] nHitchanceList = new[] { "Medium", "High", "VeryHigh" };
 
                 MenuItem qHitchanceSettings = new MenuItem("MenuSettings.Hitchance.Q", "Q Hitchance:").SetValue(new StringList(nHitchanceList, 1));
                 MenuHitchanceSettings.AddItem(qHitchanceSettings);
@@ -58,7 +110,6 @@ namespace Marksman.Common
                 MenuLocal.AddSubMenu(MenuHitchanceSettings);
             }
         }
-
         static void LoadDefaultCastDelaySettings()
         {
             string[] strQ = new string[1000 / 250];

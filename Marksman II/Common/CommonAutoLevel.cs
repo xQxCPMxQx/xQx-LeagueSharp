@@ -57,8 +57,11 @@ namespace Marksman.Common
                     SpellLevels = ObjectManager.Player.PercentMagicDamageMod
                                   > ObjectManager.Player.PercentPhysicalDamageMod
                                       ? new int[] { 2, 3, 1, 2, 1, 4, 1, 3, 1, 3, 4, 3, 3, 2, 2, 4, 2, 2 }
-                                      : new int[] { 1, 2, 3, 2, 2, 4, 2, 1, 2, 1, 4, 1, 1, 3, 3, 4, 3, 3 };
-                    //MenuLocal.AddItem(new MenuItem("AutoLevel." + championName, GetLevelList(SpellLevels)));
+                                      : new int[] { 1, 3, 1, 2, 1, 4, 1, 3, 1, 3, 4, 3, 3, 2, 2, 4, 2, 2};
+
+                //case "ezreal":
+                //    SpellLevels = new int[] { 1, 2, 3, 2, 2, 4, 2, 1, 2, 1, 4, 1, 1, 3, 3, 4, 3, 3 };
+                //    //MenuLocal.AddItem(new MenuItem("AutoLevel." + championName, GetLevelList(SpellLevels)));
                     break;
 
                 case "graves":
