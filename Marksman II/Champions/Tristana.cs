@@ -22,6 +22,9 @@ namespace Marksman.Champions
         public static Obj_AI_Hero Player = ObjectManager.Player;
         public static Spell Q, W, E, R;
 
+        private static Vector3 firstJumpPosition;
+        private static int firstJumpTick;
+
         public Tristana()
         {
             Q = new Spell(SpellSlot.Q, 703);
@@ -40,6 +43,17 @@ namespace Marksman.Champions
 
             Utils.Utils.PrintMessage("Tristana loaded.");
         }
+
+        public override void Spellbook_OnCastSpell(Spellbook sender, SpellbookCastSpellEventArgs args)
+        {
+            if (args.Slot == SpellSlot.W)
+            {
+                firstJumpPosition = ObjectManager.Player.Position;
+                firstJumpTick = LeagueSharp.Common.Utils.TickCount;
+            }
+
+        }
+
 
         private static BuffInstance GetECharge(Obj_AI_Base target)
         {
@@ -64,21 +78,20 @@ namespace Marksman.Champions
         {
             get
             {
+                var nRange = Orbwalking.GetRealAutoAttackRange(null) + 65 >= E.Range ? Orbwalking.GetRealAutoAttackRange(null) + 65 : E.Range;
                 var nResult = ObjectManager.Get<Obj_AI_Hero>()
                         .Where(
                             enemy =>
                                 !enemy.IsDead &&
-                                enemy.IsValidTarget(W.Range + Orbwalking.GetRealAutoAttackRange(Player)))
-                        .Find(enemy => enemy.Buffs.Any(buff => buff.DisplayName == "TristanaEChargeSound" || buff.DisplayName == "TristanaECharge"));
+                                enemy.IsValidTarget(nRange))
+                        .Find(enemy => enemy.Buffs.Any(buff => buff.Name == "tristanaechargesound" || buff.Name == "tristanaecharge"));
 
                 if (nResult != null)
                 {
                     return nResult;
                 }
 
-                var nAttackRange = Orbwalking.GetRealAutoAttackRange(null) + 65 > E.Range ? Orbwalking.GetRealAutoAttackRange(null) + 65 : E.Range;
-                nResult = TargetSelector.GetTarget(nAttackRange, TargetSelector.DamageType.Physical);
-                return nResult;
+                return  TargetSelector.GetTarget(nRange, TargetSelector.DamageType.Physical);
             }
         }
         private void Interrupter2_OnInterruptableTarget(Obj_AI_Hero unit, Interrupter2.InterruptableTargetEventArgs args)
@@ -89,9 +102,11 @@ namespace Marksman.Champions
             }
         }
 
-        public override void Orbwalking_BeforeAttack(Orbwalking.BeforeAttackEventArgs args)
+        public override void Orbwalking_BeforeAttack(Orb.Orbwalking.BeforeAttackEventArgs args)
         {
-            if (GetValue<bool>("Misc.UseQ.Inhibitor") && args.Target is Obj_BarracksDampener && Q.IsReady())
+            args.Process = !GetValue<KeyBind>("Combo.Insec").Active;
+
+                if (GetValue<bool>("Misc.UseQ.Inhibitor") && args.Target is Obj_BarracksDampener && Q.IsReady())
             {
                 if (((Obj_BarracksDampener) args.Target).Health >= Player.TotalAttackDamage*3)
                 {
@@ -136,10 +151,22 @@ namespace Marksman.Champions
 
         public override void Game_OnUpdate(EventArgs args)
         {
+
+
             E.Range = 630 + (7 * (Player.Level - 1));
             R.Range = 630 + (7 * (Player.Level - 1));
 
+            //if (!W.IsReady())
+            //{
+            //    firstJumpPosition = Vector3.Zero;
+            //}
+
             if (ObjectManager.Player.IsDead)
+            {
+                return;
+            }
+
+            if (GetValue<KeyBind>("Combo.Insec").Active)
             {
                 return;
             }
@@ -150,11 +177,10 @@ namespace Marksman.Champions
             {
                 return;
             }
-
+            //Console.WriteLine(t.ChampionName + " : " + t.CountEnemiesInRange(600));
             if (GetValue<KeyBind>("UseETH").Active && E.IsReady() && t.IsValidTarget(E.Range) && ToggleActive)
             {
-                if (Program.Config.Item("DontEToggleHarass" + t.ChampionName) != null &&
-                    Program.Config.Item("DontEToggleHarass" + t.ChampionName).GetValue<bool>() == false)
+                if (GetValue<bool>("DontEToggleHarass" + t.ChampionName) == false)
                 {
                     E.CastOnUnit(t);
                 }
@@ -164,7 +190,15 @@ namespace Marksman.Champions
             {
                 if (E.CanCast(t))
                 {
-                    E.CastOnUnit(t);
+                    if (GetValue<bool>("DontEToggleHarass" + t.ChampionName) == false)
+                    {
+                        E.CastOnUnit(t);
+                    }
+
+                    if (GetValue<bool>("DontEToggleHarass" + t.ChampionName) == true && t.CountEnemiesInRange(600) == 1)
+                    {
+                        E.CastOnUnit(t);
+                    }
                 }
 
                 if (GetValue<bool>("UseREC") && R.IsReady())
@@ -297,29 +331,17 @@ namespace Marksman.Champions
 
         public override void Drawing_OnDraw(EventArgs args)
         {
-
-            var t = TargetSelector.GetTarget(W.Range * 3, TargetSelector.DamageType.Magical);
-            if (t.IsValidTarget())
+            if (GetValue<KeyBind>("Combo.Insec").Active && R.IsReady())
             {
-                var nPosition = ObjectManager.Player.Position.Extend(t.Position, 400);
-
-                Render.Circle.DrawCircle(nPosition, 250f, System.Drawing.Color.White);
+                Drawing.DrawText(ObjectManager.Player.HPBarPosition.X + 150, ObjectManager.Player.HPBarPosition.Y + 5, System.Drawing.Color.Red, "Insec: ON");
             }
 
-
-
-            Spell[] spellList = {W};
+            Spell[] spellList = {W, E};
             foreach (var spell in spellList)
             {
                 var menuItem = GetValue<Circle>("Draw" + spell.Slot);
                 if (menuItem.Active)
                     Render.Circle.DrawCircle(Player.Position, spell.Range, menuItem.Color, 1);
-            }
-
-            var drawE = GetValue<Circle>("DrawE");
-            if (drawE.Active)
-            {
-                Render.Circle.DrawCircle(Player.Position, E.Range, drawE.Color, 1);
             }
         }
 
@@ -327,7 +349,7 @@ namespace Marksman.Champions
         {
             config.AddItem(new MenuItem("UseREC" + Id, "E-R Kill Combo:").SetValue(true));
             config.AddItem(new MenuItem("UseR" + Id, "R:").SetValue(true));
-            config.AddItem(new MenuItem("Combo.Insec1" + Id, "Insec [W-R]:").SetValue(new KeyBind("G".ToCharArray()[0],KeyBindType.Press)));
+            config.AddItem(new MenuItem("Combo.Insec" + Id, "Insec [W - R]:").SetValue(new KeyBind("G".ToCharArray()[0],KeyBindType.Press)));
             return true;
         }
 
@@ -340,7 +362,7 @@ namespace Marksman.Champions
                 {
                     config.SubMenu("DontEToggleHarass")
                         .AddItem(
-                            new MenuItem("DontEToggleHarass" + enemy.ChampionName, enemy.ChampionName).SetValue(false));
+                            new MenuItem("DontEToggleHarass" + enemy.ChampionName + Id, enemy.ChampionName).SetValue(false));
                 }
             }
 
@@ -353,14 +375,8 @@ namespace Marksman.Champions
 
         public override bool DrawingMenu(Menu config)
         {
-            config.AddItem(new MenuItem("DrawW" + Id, "W range").SetValue(new Circle(true, System.Drawing.Color.Beige)));
-
-            var drawE = new Menu("Draw E", "menuDrawE");
-            {
-                drawE.AddItem(
-                    new MenuItem("DrawE" + Id, "E range").SetValue(new Circle(true, System.Drawing.Color.Beige)));
-                config.AddSubMenu(drawE);
-            }
+            config.AddItem(new MenuItem("DrawW" + Id, "W:").SetValue(new Circle(true, System.Drawing.Color.Beige)));
+            config.AddItem(new MenuItem("DrawE" + Id, "E:").SetValue(new Circle(true, System.Drawing.Color.Orange)));
 
             var dmgAfterComboItem = new MenuItem("DamageAfterCombo", "Damage After Combo").SetValue(true);
             config.AddItem(dmgAfterComboItem);
@@ -441,6 +457,35 @@ namespace Marksman.Champions
 
         public override void DrawingOnEndScene(EventArgs args)
         {
+            if (GetValue<KeyBind>("Combo.Insec").Active && R.IsReady())
+            {
+                if (firstJumpTick + 3000 > LeagueSharp.Common.Utils.TickCount)
+                {
+                    Render.Circle.DrawCircle(firstJumpPosition, 50f, System.Drawing.Color.Red);
+                }
+
+                Render.Circle.DrawCircle(ObjectManager.Player.Position, W.Range, System.Drawing.Color.Red);
+
+
+                ObjectManager.Player.IssueOrder(GameObjectOrder.MoveTo, Game.CursorPos);
+                var t = TargetSelector.GetTarget(W.Range * 2, TargetSelector.DamageType.Physical);
+
+                if (t.IsValidTarget())
+                {
+                    var targetBehind = t.Position.Extend(ObjectManager.Player.Position, -200);
+                    if (W.IsReady() && ObjectManager.Player.Distance(targetBehind) <= W.Range)
+                    {
+                        W.Cast(targetBehind);
+                    }
+                    if (ObjectManager.Player.Distance(firstJumpPosition) > t.Distance(firstJumpPosition) && ObjectManager.Player.Distance(t.Position) >= t.BoundingRadius)
+                    {
+                        R.CastOnUnit(t);
+                    }
+                    Render.Circle.DrawCircle(targetBehind, 50f, System.Drawing.Color.GreenYellow);
+                }
+            }
+
+
             var enemy = TristanaData.GetEMarkedEnemy;
             if (enemy != null)
             {
@@ -548,7 +593,7 @@ namespace Marksman.Champions
                             enemy =>
                                 !enemy.IsDead &&
                                 enemy.IsValidTarget(W.Range + Orbwalking.GetRealAutoAttackRange(Player)))
-                        .FirstOrDefault(enemy => enemy.Buffs.Any(buff => buff.DisplayName == "TristanaEChargeSound"));
+                        .FirstOrDefault(enemy => enemy.Buffs.Any(buff => buff.Name == "tristanaechargesound"));
 
             //public static Obj_AI_Base GetEMarkedObjects
             //    =>
@@ -561,7 +606,7 @@ namespace Marksman.Champions
 
             public static int GetEMarkedCount
                 =>
-                    GetEMarkedEnemy?.Buffs.Where(buff => buff.DisplayName == "TristanaECharge")
+                    GetEMarkedEnemy?.Buffs.Where(buff => buff.Name == "tristanaecharge")
                         .Select(xBuff => xBuff.Count)
                         .FirstOrDefault() ?? 0;
 
