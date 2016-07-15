@@ -551,7 +551,7 @@ namespace Marksman
 
         private static void Drawing_OnDraw(EventArgs args)
         {
-            return;
+//            return;
             var turnOffDrawings = Config.Item("Draw.TurnOff").GetValue<StringList>().SelectedIndex;
 
             if (turnOffDrawings == 0)
