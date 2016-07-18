@@ -53,10 +53,11 @@ namespace Marksman.Champions
 
         public override void Spellbook_OnCastSpell(Spellbook sender, SpellbookCastSpellEventArgs args)
         {
-            if (xAttackLeft == 1)
+            if (xAttackLeft == 1 && (args.Slot == SpellSlot.Q || args.Slot == SpellSlot.W || args.Slot == SpellSlot.E))
             {
                 args.Process = false;
             }
+
             
         }
         public static Obj_AI_Base QMinion(Obj_AI_Hero t)
